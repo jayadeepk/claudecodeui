@@ -154,7 +154,7 @@ const safeLocalStorage = {
 };
 
 // Memoized message component to prevent unnecessary re-renders
-const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFileOpen, onShowSettings, autoExpandTools, showRawParameters, showAvatars, todoPanelOpen }) => {
+const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestamp, createDiff, onFileOpen, onShowSettings, autoExpandTools, showRawParameters, showAvatars, todoPanelOpen }) => {
   const isGrouped = prevMessage && prevMessage.type === message.type && 
                    prevMessage.type === 'assistant' && 
                    !prevMessage.isToolUse && !message.isToolUse;
@@ -1099,7 +1099,7 @@ const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFile
               </div>
             )}
             
-            {!message.isToolUse && (
+            {!message.isToolUse && shouldShowTimestamp && (
               <div className={`text-xs text-gray-500 dark:text-gray-400 mt-1 ${isGrouped ? 'opacity-0 group-hover:opacity-100' : ''}`}>
                 {new Date(message.timestamp).toLocaleTimeString()}
               </div>
@@ -3177,12 +3177,19 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
             {visibleMessages.map((message, index) => {
               const prevMessage = index > 0 ? visibleMessages[index - 1] : null;
               
+              // Check if there are any subsequent non-tool-use assistant messages
+              const hasSubsequentNonToolAssistantMessage = visibleMessages.slice(index + 1)
+                .some(msg => msg.type === 'assistant' && !msg.isToolUse);
+              
+              const shouldShowTimestamp = message.type === 'assistant' && !hasSubsequentNonToolAssistantMessage;
+              
               return (
                 <MessageComponent
                   key={index}
                   message={message}
                   index={index}
                   prevMessage={prevMessage}
+                  shouldShowTimestamp={shouldShowTimestamp}
                   createDiff={createDiff}
                   onFileOpen={onFileOpen}
                   onShowSettings={onShowSettings}
