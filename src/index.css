@@ -612,7 +612,7 @@
   display: none !important;
 }
 
-/* Custom spinner animation for mobile compatibility */
+/* Custom animations for mobile compatibility */
 @layer utilities {
   @keyframes spin {
     from {
@@ -623,8 +623,21 @@
     }
   }
   
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  
   .animate-spin {
     animation: spin 1s linear infinite;
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
   }
   
   /* Force hardware acceleration for smoother animation on mobile */

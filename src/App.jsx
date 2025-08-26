@@ -18,13 +18,14 @@
  * Handles both existing sessions (with real IDs) and new sessions (with temporary IDs).
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
 import MobileNav from './components/MobileNav';
 import ToolsSettings from './components/ToolsSettings';
 import QuickSettingsPanel from './components/QuickSettingsPanel';
+import TodoPanel from './components/TodoPanel';
 
 import { useWebSocket } from './utils/websocket';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -66,6 +67,12 @@ function AppContent() {
   });
   const [sendByCtrlEnter, setSendByCtrlEnter] = useState(() => {
     const saved = localStorage.getItem('sendByCtrlEnter');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+  // Todo panel state
+  const [todos, setTodos] = useState([]);
+  const [todoPanelOpen, setTodoPanelOpen] = useState(() => {
+    const saved = localStorage.getItem('todoPanelOpen');
     return saved !== null ? JSON.parse(saved) : false;
   });
   // Session Protection System: Track sessions with active conversations to prevent
@@ -182,9 +189,25 @@ function AppContent() {
             }
           }
         }
+      } else if (latestMessage.type === 'claude-complete') {
+        // When Claude completes, mark any in_progress todos as completed
+        // but keep the todos visible so user can see what was accomplished
+        console.log('📋 Claude session completed, updating todo status');
+        if (todos.length > 0) {
+          const updatedTodos = todos.map(todo => 
+            todo.status === 'in_progress' 
+              ? { ...todo, status: 'completed' }
+              : todo
+          );
+          setTodos(updatedTodos);
+        }
+      } else if (latestMessage.type === 'session-aborted') {
+        // Clear todos when session is aborted since work was interrupted
+        console.log('📋 Clearing todos after session abort');
+        setTodos([]);
       }
     }
-  }, [messages, selectedProject, selectedSession, activeSessions]);
+  }, [messages, selectedProject, selectedSession, activeSessions, todos]);
 
   const fetchProjects = async () => {
     try {
@@ -451,6 +474,26 @@ function AppContent() {
     }
   };
 
+  // clearTodos: Called when user starts a new conversation
+  const clearTodos = () => {
+    console.log('📋 Clearing todos for new conversation');
+    setTodos([]);
+  };
+
+  // handleTodoUpdate: Called directly from ChatInterface when todos are extracted from messages
+  const handleTodoUpdate = useCallback((todos) => {
+    console.log('📋 Direct todo update from ChatInterface:', todos);
+    setTodos([...todos]);
+    
+    // Auto-open panel when todos are active (have in_progress items)
+    if (todos && todos.some(t => t.status === 'in_progress')) {
+      if (!todoPanelOpen && !isMobile) {
+        setTodoPanelOpen(true);
+        localStorage.setItem('todoPanelOpen', JSON.stringify(true));
+      }
+    }
+  }, [todoPanelOpen, isMobile]);
+
   // Version Upgrade Modal Component
   const VersionUpgradeModal = () => {
     if (!showVersionModal) return null;
@@ -628,12 +671,28 @@ function AppContent() {
           onReplaceTemporarySession={replaceTemporarySession}
           onNavigateToSession={(sessionId) => navigate(`/session/${sessionId}`)}
           onShowSettings={() => setShowToolsSettings(true)}
+          onClearTodos={clearTodos}
+          onTodoUpdate={handleTodoUpdate}
           autoExpandTools={autoExpandTools}
           showRawParameters={showRawParameters}
           autoScrollToBottom={autoScrollToBottom}
           sendByCtrlEnter={sendByCtrlEnter}
+          todoPanelOpen={todoPanelOpen}
         />
       </div>
+
+      {/* Todo Panel - Desktop only, positioned on the right */}
+      {!isMobile && activeTab === 'chat' && (
+        <TodoPanel
+          todos={todos}
+          isOpen={todoPanelOpen}
+          onToggle={(open) => {
+            setTodoPanelOpen(open);
+            localStorage.setItem('todoPanelOpen', JSON.stringify(open));
+          }}
+          isMobile={false}
+        />
+      )}
 
       {/* Mobile Bottom Navigation */}
       {isMobile && (
@@ -642,6 +701,40 @@ function AppContent() {
           setActiveTab={setActiveTab}
           isInputFocused={isInputFocused}
         />
+      )}
+
+      {/* Mobile Todo Panel */}
+      {isMobile && activeTab === 'chat' && todos.length > 0 && (
+        <>
+          {/* Floating button to open todo panel */}
+          {!todoPanelOpen && (
+            <button
+              onClick={() => {
+                setTodoPanelOpen(true);
+                localStorage.setItem('todoPanelOpen', JSON.stringify(true));
+              }}
+              className="fixed bottom-20 right-4 z-30 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              {todos.filter(t => t.status === 'in_progress').length > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+              )}
+            </button>
+          )}
+          
+          {/* Todo Panel for mobile */}
+          <TodoPanel
+            todos={todos}
+            isOpen={todoPanelOpen}
+            onToggle={(open) => {
+              setTodoPanelOpen(open);
+              localStorage.setItem('todoPanelOpen', JSON.stringify(open));
+            }}
+            isMobile={true}
+          />
+        </>
       )}
       {/* Quick Settings Panel - Only show on chat tab */}
       {activeTab === 'chat' && (
