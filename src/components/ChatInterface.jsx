@@ -154,7 +154,7 @@ const safeLocalStorage = {
 };
 
 // Memoized message component to prevent unnecessary re-renders
-const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFileOpen, onShowSettings, autoExpandTools, showRawParameters, showAvatars }) => {
+const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFileOpen, onShowSettings, autoExpandTools, showRawParameters, showAvatars, todoPanelOpen }) => {
   const isGrouped = prevMessage && prevMessage.type === message.type && 
                    prevMessage.type === 'assistant' && 
                    !prevMessage.isToolUse && !message.isToolUse;
@@ -1014,21 +1014,21 @@ const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFile
                 try {
                   const input = JSON.parse(message.toolInput);
                   if (input.todos && Array.isArray(input.todos)) {
-                    return (
+                    return !todoPanelOpen ? (
                       <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2">
                         <div className="text-sm text-blue-700 dark:text-blue-300 mb-2">
                           📝 Update todo list
                         </div>
                         <TodoList todos={input.todos} />
                       </div>
-                    );
+                    ) : null;
                   }
                 } catch (e) {
-                  return (
+                  return !todoPanelOpen ? (
                     <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2 text-sm text-blue-700 dark:text-blue-300">
                       📝 Update todo list
                     </div>
-                  );
+                  ) : null;
                 }
               })()
             ) : message.isToolUse && message.toolName === 'TodoRead' ? (
@@ -1156,7 +1156,7 @@ const ImageAttachment = ({ file, onRemove, uploadProgress, error }) => {
 // - onReplaceTemporarySession: Called to replace temporary session ID with real WebSocket session ID
 //
 // This ensures uninterrupted chat experience by pausing sidebar refreshes during conversations.
-function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, messages, onFileOpen, onInputFocusChange, onSessionActive, onSessionInactive, onReplaceTemporarySession, onNavigateToSession, onShowSettings, autoExpandTools, showRawParameters, autoScrollToBottom, sendByCtrlEnter }) {
+function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, messages, onFileOpen, onInputFocusChange, onSessionActive, onSessionInactive, onReplaceTemporarySession, onNavigateToSession, onShowSettings, onClearTodos, onTodoUpdate, autoExpandTools, showRawParameters, autoScrollToBottom, sendByCtrlEnter, todoPanelOpen }) {
   const [input, setInput] = useState(() => {
     if (typeof window !== 'undefined' && selectedProject) {
       return safeLocalStorage.getItem(`draft_input_${selectedProject.name}`) || '';
@@ -1253,6 +1253,36 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     }
   }, [provider]);
 
+  // Extract todos from messages and update sidebar directly
+  useEffect(() => {
+    if (!onTodoUpdate || !chatMessages.length) return;
+
+    // Find the latest TodoWrite tool use in messages
+    let latestTodos = null;
+    
+    // Search messages in reverse order to find the most recent todos
+    for (let i = chatMessages.length - 1; i >= 0; i--) {
+      const message = chatMessages[i];
+      
+      // Check for TodoWrite tool in assistant messages
+      if (message.isToolUse && message.toolName === 'TodoWrite') {
+        try {
+          const input = JSON.parse(message.toolInput);
+          if (input.todos && Array.isArray(input.todos)) {
+            latestTodos = input.todos;
+            break;
+          }
+        } catch (error) {
+          console.warn('Error parsing TodoWrite input:', error);
+        }
+      }
+    }
+    
+    // Update sidebar with latest todos
+    if (latestTodos) {
+      onTodoUpdate(latestTodos);
+    }
+  }, [chatMessages, onTodoUpdate]);
 
   // Memoized diff calculation to prevent recalculating on every render
   const createDiff = useMemo(() => {
@@ -2718,6 +2748,11 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
       can_interrupt: true
     });
     
+    // Clear any existing todos when starting a new conversation
+    if (onClearTodos) {
+      onClearTodos();
+    }
+    
     // Always scroll to bottom when user sends a message and reset scroll state
     setIsUserScrolledUp(false); // Reset scroll state so auto-scroll works for Claude's response
     setTimeout(() => scrollToBottom(), 100); // Longer delay to ensure message is rendered
@@ -3154,6 +3189,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                   autoExpandTools={autoExpandTools}
                   showRawParameters={showRawParameters}
                   showAvatars={showAvatars}
+                  todoPanelOpen={todoPanelOpen}
                 />
               );
             })}

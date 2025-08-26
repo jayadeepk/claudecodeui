@@ -40,10 +40,13 @@ function MainContent({
   onReplaceTemporarySession, // Replace temporary session ID with real session ID from WebSocket
   onNavigateToSession,    // Navigate to a specific session (for Claude CLI session duplication workaround)
   onShowSettings,         // Show tools settings panel
+  onClearTodos,           // Clear todos when starting new conversation
+  onTodoUpdate,           // Update todos directly from message content
   autoExpandTools,        // Auto-expand tool accordions
   showRawParameters,      // Show raw parameters in tool accordions
   autoScrollToBottom,     // Auto-scroll to bottom when new messages arrive
-  sendByCtrlEnter         // Send by Ctrl+Enter mode for East Asian language input
+  sendByCtrlEnter,        // Send by Ctrl+Enter mode for East Asian language input
+  todoPanelOpen           // Whether the Task Progress sidebar is open
 }) {
   const [editingFile, setEditingFile] = useState(null);
 
@@ -298,10 +301,13 @@ function MainContent({
               onReplaceTemporarySession={onReplaceTemporarySession}
               onNavigateToSession={onNavigateToSession}
               onShowSettings={onShowSettings}
+              onClearTodos={onClearTodos}
+              onTodoUpdate={onTodoUpdate}
               autoExpandTools={autoExpandTools}
               showRawParameters={showRawParameters}
               autoScrollToBottom={autoScrollToBottom}
               sendByCtrlEnter={sendByCtrlEnter}
+              todoPanelOpen={todoPanelOpen}
             />
           </ErrorBoundary>
         </div>
