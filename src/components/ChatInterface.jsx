@@ -1014,21 +1014,11 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                 try {
                   const input = JSON.parse(message.toolInput);
                   if (input.todos && Array.isArray(input.todos)) {
-                    return !todoPanelOpen ? (
-                      <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2">
-                        <div className="text-sm text-blue-700 dark:text-blue-300 mb-2">
-                          📝 Update todo list
-                        </div>
-                        <TodoList todos={input.todos} />
-                      </div>
-                    ) : null;
+                    // Always hide todo list updates since we have a separate todo panel now
+                    return null;
                   }
                 } catch (e) {
-                  return !todoPanelOpen ? (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2 text-sm text-blue-700 dark:text-blue-300">
-                      📝 Update todo list
-                    </div>
-                  ) : null;
+                  return null;
                 }
               })()
             ) : message.isToolUse && message.toolName === 'TodoRead' ? (

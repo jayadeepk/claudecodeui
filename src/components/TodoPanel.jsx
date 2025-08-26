@@ -81,7 +81,7 @@ const TodoPanel = ({ todos, isOpen, onToggle, isMobile }) => {
             </div>
           )}
           
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 pb-20">
             {todos && todos.length > 0 ? (
               <div className="space-y-2">
                 {todos.map((todo, index) => (
