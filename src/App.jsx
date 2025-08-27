@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
 import MobileNav from './components/MobileNav';
@@ -39,6 +39,7 @@ import { api, authenticatedFetch } from './utils/api';
 // Main App component with routing
 function AppContent() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { sessionId } = useParams();
   
   const { updateAvailable, latestVersion, currentVersion } = useVersionCheck('siteboon', 'claudecodeui');
@@ -99,6 +100,13 @@ function AppContent() {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Auto-open sidebar on mobile when on root URL
+  useEffect(() => {
+    if (isMobile && location.pathname === '/' && !isLoadingProjects) {
+      setSidebarOpen(true);
+    }
+  }, [isMobile, location.pathname, isLoadingProjects]);
 
   useEffect(() => {
     // Fetch projects on component mount
