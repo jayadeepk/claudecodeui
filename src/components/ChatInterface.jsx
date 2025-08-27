@@ -253,7 +253,7 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
           
           <div className="w-full">
             
-            {message.isToolUse && !['Read', 'TodoWrite', 'TodoRead'].includes(message.toolName) ? (
+            {message.isToolUse && !['Read', 'TodoWrite', 'TodoRead', 'Edit', 'Grep'].includes(message.toolName) ? (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 sm:p-3 mb-2">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -286,97 +286,7 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                     </button>
                   )}
                 </div>
-                {message.toolInput && message.toolName === 'Edit' && (() => {
-                  try {
-                    const input = JSON.parse(message.toolInput);
-                    if (input.file_path && input.old_string && input.new_string) {
-                      return (
-                        <details className={`mt-2 ${autoExpandTools ? 'auto-expand-hide-summary' : ''}`} open={autoExpandTools}>
-                          <summary className="text-sm text-blue-700 dark:text-blue-300 cursor-pointer hover:text-blue-800 dark:hover:text-blue-200 flex items-center gap-2">
-                            <svg className="w-4 h-4 transition-transform details-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                            📝 View edit diff for 
-                            <button 
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onFileOpen && onFileOpen(input.file_path, {
-                                  old_string: input.old_string,
-                                  new_string: input.new_string
-                                });
-                              }}
-                              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-mono"
-                            >
-                              {input.file_path.split('/').pop()}
-                            </button>
-                          </summary>
-                          <div className="mt-3">
-                            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                              <div className="flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                                <button 
-                                  onClick={() => onFileOpen && onFileOpen(input.file_path, {
-                                    old_string: input.old_string,
-                                    new_string: input.new_string
-                                  })}
-                                  className="text-xs font-mono text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 truncate underline cursor-pointer"
-                                >
-                                  {input.file_path}
-                                </button>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  Diff
-                                </span>
-                              </div>
-                              <div className="text-xs font-mono">
-                                {createDiff(input.old_string, input.new_string).map((diffLine, i) => (
-                                  <div key={i} className="flex">
-                                    <span className={`w-8 text-center border-r ${
-                                      diffLine.type === 'removed' 
-                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
-                                        : 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800'
-                                    }`}>
-                                      {diffLine.type === 'removed' ? '-' : '+'}
-                                    </span>
-                                    <span className={`px-2 py-0.5 flex-1 whitespace-pre-wrap ${
-                                      diffLine.type === 'removed'
-                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'
-                                        : 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200'
-                                    }`}>
-                                      {diffLine.content}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                            {showRawParameters && (
-                              <details className={`mt-2 ${autoExpandTools ? 'auto-expand-hide-summary' : ''}`} open={autoExpandTools}>
-                                <summary className="text-xs text-blue-600 dark:text-blue-400 cursor-pointer hover:text-blue-700 dark:hover:text-blue-300">
-                                  View raw parameters
-                                </summary>
-                                <pre className="mt-2 text-xs bg-blue-100 dark:bg-blue-800/30 p-2 rounded whitespace-pre-wrap break-words overflow-hidden text-blue-900 dark:text-blue-100">
-                                  {message.toolInput}
-                                </pre>
-                              </details>
-                            )}
-                          </div>
-                        </details>
-                      );
-                    }
-                  } catch (e) {
-                    // Fall back to raw display if parsing fails
-                  }
-                  return (
-                    <details className={`mt-2 ${autoExpandTools ? 'auto-expand-hide-summary' : ''}`} open={autoExpandTools}>
-                      <summary className="text-sm text-blue-700 dark:text-blue-300 cursor-pointer hover:text-blue-800 dark:hover:text-blue-200">
-                        View input parameters
-                      </summary>
-                      <pre className="mt-2 text-xs bg-blue-100 dark:bg-blue-800/30 p-2 rounded whitespace-pre-wrap break-words overflow-hidden text-blue-900 dark:text-blue-100">
-                        {message.toolInput}
-                      </pre>
-                    </details>
-                  );
-                })()}
-                {message.toolInput && message.toolName !== 'Edit' && (() => {
+                {message.toolInput && message.toolName !== 'Edit' && message.toolName !== 'Grep' && (() => {
                   // Debug log to see what we're dealing with
                   
                   // Special handling for Write tool
@@ -469,32 +379,6 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                     }
                   }
                   
-                  // Special handling for Grep tool
-                  if (message.toolName === 'Grep') {
-                    try {
-                      let input;
-                      // Handle both JSON string and already parsed object
-                      if (typeof message.toolInput === 'string') {
-                        input = JSON.parse(message.toolInput);
-                      } else {
-                        input = message.toolInput;
-                      }
-                      
-                      if (input.pattern) {
-                        const path = input.path || 'current directory';
-                        const displayPath = path.replace(/^\/home\/[^\/]+\/[^\/]+\//, '');
-                        
-                        return (
-                          <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                            🔍 Searching for "{input.pattern}" in {displayPath}
-                          </div>
-                        );
-                      }
-                    } catch (e) {
-                      // Fall back to regular display
-                    }
-                  }
-
                   // Special handling for TodoWrite tool
                   if (message.toolName === 'TodoWrite') {
                     try {
@@ -914,6 +798,308 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                           );
                         }
                         
+                        return (
+                          <div className="prose prose-sm max-w-none prose-green dark:prose-invert">
+                            <ReactMarkdown>{content}</ReactMarkdown>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : message.isToolUse && (message.toolName === 'Edit' || message.toolName === 'Grep') ? (
+              // Special handling for Edit and Grep tools without blue wrapper
+              <div>
+                {message.toolInput && message.toolName === 'Edit' && (() => {
+                  try {
+                    const input = JSON.parse(message.toolInput);
+                    if (input.file_path && input.old_string && input.new_string) {
+                      return (
+                        <details className={`mt-2 ${autoExpandTools ? 'auto-expand-hide-summary' : ''}`} open={autoExpandTools}>
+                          <summary className="text-sm text-blue-700 dark:text-blue-300 cursor-pointer hover:text-blue-800 dark:hover:text-blue-200 flex items-center gap-2">
+                            <svg className="w-4 h-4 transition-transform details-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                            📝 View edit diff for 
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onFileOpen && onFileOpen(input.file_path, {
+                                  old_string: input.old_string,
+                                  new_string: input.new_string
+                                });
+                              }}
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-mono"
+                            >
+                              {input.file_path.split('/').pop()}
+                            </button>
+                          </summary>
+                          <div className="mt-3">
+                            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                              <div className="flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                                <button 
+                                  onClick={() => onFileOpen && onFileOpen(input.file_path, {
+                                    old_string: input.old_string,
+                                    new_string: input.new_string
+                                  })}
+                                  className="text-xs font-mono text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 truncate underline cursor-pointer"
+                                >
+                                  {input.file_path}
+                                </button>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  Edit
+                                </span>
+                              </div>
+                              <div className="text-xs font-mono">
+                                {createDiff(input.old_string, input.new_string).map((diffLine, i) => (
+                                  <div key={i} className="flex">
+                                    <span className={`w-8 text-center border-r ${
+                                      diffLine.type === 'removed' 
+                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
+                                        : 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800'
+                                    }`}>
+                                      {diffLine.type === 'removed' ? '-' : '+'}
+                                    </span>
+                                    <span className={`px-2 py-0.5 flex-1 whitespace-pre-wrap ${
+                                      diffLine.type === 'removed'
+                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'
+                                        : 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200'
+                                    }`}>
+                                      {diffLine.content}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            {showRawParameters && (
+                              <details className={`mt-2 ${autoExpandTools ? 'auto-expand-hide-summary' : ''}`} open={autoExpandTools}>
+                                <summary className="text-xs text-blue-600 dark:text-blue-400 cursor-pointer hover:text-blue-700 dark:hover:text-blue-300">
+                                  View raw parameters
+                                </summary>
+                                <pre className="mt-2 text-xs bg-blue-100 dark:bg-blue-800/30 p-2 rounded whitespace-pre-wrap break-words overflow-hidden text-blue-900 dark:text-blue-100">
+                                  {message.toolInput}
+                                </pre>
+                              </details>
+                            )}
+                          </div>
+                        </details>
+                      );
+                    }
+                  } catch (e) {
+                    // Fall back to regular display
+                  }
+                })()}
+                
+                {message.toolInput && message.toolName === 'Grep' && (() => {
+                  try {
+                    let input;
+                    // Handle both JSON string and already parsed object
+                    if (typeof message.toolInput === 'string') {
+                      input = JSON.parse(message.toolInput);
+                    } else {
+                      input = message.toolInput;
+                    }
+                    
+                    if (input.pattern) {
+                      const path = input.path || 'current directory';
+                      const displayPath = path.replace(/^\/home\/[^\/]+\/[^\/]+\//, '');
+                      
+                      return (
+                        <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                          🔍 Searching for "{input.pattern}" in {displayPath}
+                        </div>
+                      );
+                    }
+                  } catch (e) {
+                    // Fall back to regular display
+                  }
+                })()}
+
+                {/* Tool Result Section */}
+                {message.toolResult && (
+                  <div className={`mt-3 ${message.toolResult.isError ? 'border-t border-blue-200 dark:border-blue-700 pt-3' : ''}`}>
+                    {message.toolResult.isError && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-4 h-4 rounded flex items-center justify-center bg-red-500">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                          Tool Error
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className={`text-sm ${
+                      message.toolResult.isError 
+                        ? 'text-red-800 dark:text-red-200' 
+                        : 'text-green-800 dark:text-green-200'
+                    }`}>
+                      {(() => {
+                        const content = String(message.toolResult.content || '');
+                        
+                        // Special handling for TodoWrite/TodoRead results
+                        if ((message.toolName === 'TodoWrite' || message.toolName === 'TodoRead') &&
+                            (content.includes('Todos have been modified successfully') || 
+                             content.includes('Todo list retrieved successfully') ||
+                             content.includes('The todo list is empty'))) {
+                          return null;
+                        }
+                        
+                        // Special handling for exit_plan_mode
+                        if (message.toolName === 'exit_plan_mode') {
+                          return (
+                            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 bg-green-600 rounded flex items-center justify-center">
+                                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                                <span className="font-medium text-green-900 dark:text-green-100">
+                                  Plan Complete
+                                </span>
+                              </div>
+                              <div className="mt-2 text-sm text-green-800 dark:text-green-200">
+                                <ReactMarkdown>{content}</ReactMarkdown>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Handle interactive bash prompts
+                        if (content.includes('Do you want to proceed?') && message.toolName === 'Bash') {
+                          return (
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-2">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-5 h-5 bg-amber-600 rounded flex items-center justify-center">
+                                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                                <span className="font-medium text-amber-900 dark:text-amber-100">
+                                  Confirmation Required
+                                </span>
+                              </div>
+                              <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
+                                {content}
+                              </p>
+                              <p className="text-xs text-amber-600 dark:text-amber-400">
+                                Please respond in your terminal where Claude is running.
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        // Handle Write tool output for file creation
+                        const fileCreateMatch = content.match(/(?:The file|File) (.+?) has been (?:created|written)(?: successfully)?\.?/);
+                        if (fileCreateMatch) {
+                          return (
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="font-medium">File created successfully</span>
+                              </div>
+                              <button 
+                                onClick={() => onFileOpen && onFileOpen(fileCreateMatch[1])}
+                                className="text-xs font-mono bg-green-100 dark:bg-green-800/30 px-2 py-1 rounded text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline cursor-pointer"
+                              >
+                                {fileCreateMatch[1]}
+                              </button>
+                            </div>
+                          );
+                        }
+                        
+                        // Special handling for Write tool - hide content if it's just the file content
+                        if (message.toolName === 'Write' && !message.toolResult.isError) {
+                          if (content.includes('File has been written successfully') || 
+                              content.includes('has been created') ||
+                              content.includes('has been written')) {
+                            return null;
+                          }
+                        }
+
+                        // Handle Bash output
+                        if (message.toolName === 'Bash' && !message.toolResult.isError) {
+                          const bashOutput = content.trim();
+                          
+                          if (!bashOutput) {
+                            return (
+                              <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                Command completed successfully
+                              </div>
+                            );
+                          }
+                          
+                          // Check if the content is interactive (contains options with numbers)
+                          const hasInteractiveOptions = bashOutput.includes('❯') && /\d+\.\s+/.test(bashOutput);
+                          
+                          if (hasInteractiveOptions) {
+                            const lines = bashOutput.split('\n').filter(line => line.trim());
+                            const questionLine = lines.find(line => line.includes('?')) || lines[0] || '';
+                            const options = [];
+                            
+                            // Parse the menu options
+                            lines.forEach(line => {
+                              const optionMatch = line.match(/[❯\s]*(\d+)\.\s+(.+)/);
+                              if (optionMatch) {
+                                const isSelected = line.includes('❯');
+                                options.push({
+                                  number: optionMatch[1],
+                                  text: optionMatch[2].trim(),
+                                  isSelected
+                                });
+                              }
+                            });
+                            
+                            return (
+                              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="w-5 h-5 bg-amber-600 rounded flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                  </div>
+                                  <span className="font-medium text-amber-900 dark:text-amber-100">
+                                    Interactive Selection
+                                  </span>
+                                </div>
+                                <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
+                                  {questionLine}
+                                </p>
+                                <div className="space-y-1 mb-3">
+                                  {options.map((option) => (
+                                    <div 
+                                      key={option.number}
+                                      className={`flex items-center gap-2 text-sm p-2 rounded ${
+                                        option.isSelected 
+                                          ? 'bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 font-medium' 
+                                          : 'text-amber-700 dark:text-amber-300'
+                                      }`}
+                                    >
+                                      <span className="font-mono text-xs">{option.number}.</span>
+                                      <span>{option.text}</span>
+                                      {option.isSelected && <span className="ml-auto text-amber-600">❯</span>}
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-amber-600 dark:text-amber-400">
+                                  Please select an option in your terminal where Claude is running.
+                                </p>
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <pre className="font-mono text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded-lg whitespace-pre-wrap break-words overflow-hidden max-w-full border border-gray-200 dark:border-gray-700">
+                              {bashOutput}
+                            </pre>
+                          );
+                        }
+
+                        // Default case for all other tool results
                         return (
                           <div className="prose prose-sm max-w-none prose-green dark:prose-invert">
                             <ReactMarkdown>{content}</ReactMarkdown>
