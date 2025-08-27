@@ -469,6 +469,32 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                     }
                   }
                   
+                  // Special handling for Grep tool
+                  if (message.toolName === 'Grep') {
+                    try {
+                      let input;
+                      // Handle both JSON string and already parsed object
+                      if (typeof message.toolInput === 'string') {
+                        input = JSON.parse(message.toolInput);
+                      } else {
+                        input = message.toolInput;
+                      }
+                      
+                      if (input.pattern) {
+                        const path = input.path || 'current directory';
+                        const displayPath = path.replace(/^\/home\/[^\/]+\/[^\/]+\//, '');
+                        
+                        return (
+                          <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                            🔍 Searching for "{input.pattern}" in {displayPath}
+                          </div>
+                        );
+                      }
+                    } catch (e) {
+                      // Fall back to regular display
+                    }
+                  }
+
                   // Special handling for TodoWrite tool
                   if (message.toolName === 'TodoWrite') {
                     try {
