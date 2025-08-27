@@ -3451,7 +3451,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
 
       {/* Input Area - Fixed Bottom */}
       <div className={`p-2 sm:p-4 md:p-4 flex-shrink-0 ${
-        isInputFocused ? 'pb-2 sm:pb-4 md:pb-6' : 'pb-16 sm:pb-4 md:pb-6'
+        isInputFocused ? 'pb-2 sm:pb-4 md:pb-6' : 'pb-8 sm:pb-4 md:pb-6'
       }`}>
     
         <div className="flex-1">
