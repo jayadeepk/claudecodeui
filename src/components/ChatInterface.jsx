@@ -808,8 +808,8 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                   </div>
                 )}
               </div>
-            ) : message.isToolUse && (message.toolName === 'Edit' || message.toolName === 'Grep') ? (
-              // Special handling for Edit and Grep tools without blue wrapper
+            ) : message.isToolUse && message.toolName === 'Edit' ? (
+              // Special handling for Edit tool without blue wrapper
               <div>
                 {message.toolInput && message.toolName === 'Edit' && (() => {
                   try {
@@ -892,30 +892,6 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                   }
                 })()}
                 
-                {message.toolInput && message.toolName === 'Grep' && (() => {
-                  try {
-                    let input;
-                    // Handle both JSON string and already parsed object
-                    if (typeof message.toolInput === 'string') {
-                      input = JSON.parse(message.toolInput);
-                    } else {
-                      input = message.toolInput;
-                    }
-                    
-                    if (input.pattern) {
-                      const path = input.path || 'current directory';
-                      const displayPath = path.replace(/^\/home\/[^\/]+\/[^\/]+\//, '');
-                      
-                      return (
-                        <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                          🔍 Searching for "{input.pattern}" in {displayPath}
-                        </div>
-                      );
-                    }
-                  } catch (e) {
-                    // Fall back to regular display
-                  }
-                })()}
 
                 {/* Tool Result Section */}
                 {message.toolResult && (
@@ -1216,6 +1192,36 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                   return (
                     <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2 text-sm text-blue-700 dark:text-blue-300">
                       📖 Read file
+                    </div>
+                  );
+                }
+              })()
+            ) : message.isToolUse && message.toolName === 'Grep' ? (
+              // Simple Grep tool indicator
+              (() => {
+                try {
+                  let input;
+                  // Handle both JSON string and already parsed object
+                  if (typeof message.toolInput === 'string') {
+                    input = JSON.parse(message.toolInput);
+                  } else {
+                    input = message.toolInput;
+                  }
+                  
+                  if (input.pattern) {
+                    const path = input.path || 'current directory';
+                    const displayPath = path.replace(/^\/home\/[^\/]+\/[^\/]+\//, '');
+                    
+                    return (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2 text-sm text-blue-700 dark:text-blue-300">
+                        🔍 Searching for "{input.pattern}" in {displayPath}
+                      </div>
+                    );
+                  }
+                } catch (e) {
+                  return (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2 text-sm text-blue-700 dark:text-blue-300">
+                      🔍 Search
                     </div>
                   );
                 }
