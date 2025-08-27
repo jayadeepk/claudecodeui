@@ -2757,15 +2757,21 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     }
   }, [chatMessages.length, isUserScrolledUp, scrollToBottom, autoScrollToBottom]);
 
-  // Scroll to bottom when component mounts with existing messages or when messages first load
+  // Scroll to bottom when messages first load (only once per session)
+  const hasScrolledToBottomRef = useRef(false);
   useEffect(() => {
-    if (scrollContainerRef.current && chatMessages.length > 0) {
-      // Always scroll to bottom when messages first load (user expects to see latest)
-      // Also reset scroll state
+    if (scrollContainerRef.current && chatMessages.length > 0 && !hasScrolledToBottomRef.current) {
+      // Only scroll to bottom on initial load, not on subsequent updates
       setIsUserScrolledUp(false);
-      setTimeout(() => scrollToBottom(), 200); // Longer delay to ensure full rendering
+      setTimeout(() => scrollToBottom(), 200);
+      hasScrolledToBottomRef.current = true;
     }
-  }, [chatMessages.length > 0, scrollToBottom]); // Trigger when messages first appear
+  }, [chatMessages.length > 0, scrollToBottom]);
+  
+  // Reset scroll flag when session changes
+  useEffect(() => {
+    hasScrolledToBottomRef.current = false;
+  }, [selectedSession?.id]);
 
   // Add scroll event listener to detect user scrolling
   useEffect(() => {
