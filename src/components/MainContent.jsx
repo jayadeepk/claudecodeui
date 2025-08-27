@@ -127,11 +127,6 @@ function MainContent({
             <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
               Select a project from the sidebar to start coding with Claude. Each project contains your chat sessions and file history.
             </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                💡 <strong>Tip:</strong> {isMobile ? 'Tap the menu button above to access projects' : 'Create a new project by clicking the folder icon in the sidebar'}
-              </p>
-            </div>
           </div>
         </div>
       </div>
