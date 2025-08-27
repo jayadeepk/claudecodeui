@@ -73,7 +73,7 @@ function AppContent() {
   const [todos, setTodos] = useState([]);
   const [todoPanelOpen, setTodoPanelOpen] = useState(() => {
     const saved = localStorage.getItem('todoPanelOpen');
-    return saved !== null ? JSON.parse(saved) : false;
+    return saved !== null ? JSON.parse(saved) : true;
   });
   // Session Protection System: Track sessions with active conversations to prevent
   // automatic project updates from interrupting ongoing chats. When a user sends
@@ -85,7 +85,12 @@ function AppContent() {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Close todo panel on mobile by default
+      if (mobile && !localStorage.getItem('todoPanelOpen')) {
+        setTodoPanelOpen(false);
+      }
     };
     
     checkMobile();
@@ -708,7 +713,7 @@ function AppContent() {
         <>
           {/* Pull Tab to open todo panel */}
           {!todoPanelOpen && (
-            <div className="fixed bottom-32 left-0 z-50 transition-all duration-150 ease-out">
+            <div className="fixed bottom-44 left-0 z-50 transition-all duration-150 ease-out">
               <button
                 onClick={() => {
                   setTodoPanelOpen(true);

@@ -130,14 +130,12 @@ const TodoPanel = ({ todos, isOpen, onToggle, isMobile }) => {
       {/* Toggle button */}
       <button
         onClick={handleToggle}
-        className="absolute -left-8 top-4 w-8 h-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-l-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center group"
+        className="absolute -left-10 top-24 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 border-r-0 rounded-l-md px-2.5 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center group shadow-lg transition-colors"
         title={isCollapsed ? 'Show todo panel' : 'Hide todo panel'}
       >
-        {isCollapsed ? (
-          <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" />
-        )}
+        <svg className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
       </button>
 
       {/* Panel content */}
