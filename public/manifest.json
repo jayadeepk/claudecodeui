@@ -1,6 +1,6 @@
 {
   "name": "Claude Code UI",
-  "short_name": "Claude UI",
+  "short_name": "Claude Code",
   "description": "Claude Code UI web application",
   "start_url": "/",
   "display": "standalone",
