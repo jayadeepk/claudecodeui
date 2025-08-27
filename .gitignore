@@ -127,3 +127,9 @@ dev-debug.log
 # Task files
 # tasks.json
 # tasks/ 
+
+# SSL certificates (local development)
+*.pem
+*.crt
+*.key
+openssl.conf

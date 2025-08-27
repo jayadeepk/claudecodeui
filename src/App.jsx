@@ -26,6 +26,7 @@ import MobileNav from './components/MobileNav';
 import ToolsSettings from './components/ToolsSettings';
 import QuickSettingsPanel from './components/QuickSettingsPanel';
 import TodoPanel from './components/TodoPanel';
+import PWAInstallBanner from './components/PWAInstallBanner';
 
 import { useWebSocket } from './utils/websocket';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -586,9 +587,14 @@ function AppContent() {
   };
 
   return (
-    <div className="fixed inset-0 flex bg-background">
-      {/* Fixed Desktop Sidebar */}
-      {!isMobile && (
+    <div className="fixed inset-0 flex flex-col bg-background">
+      {/* PWA Install Banner */}
+      <PWAInstallBanner />
+      
+      {/* Main App Content */}
+      <div className="flex flex-1 min-h-0">
+        {/* Fixed Desktop Sidebar */}
+        {!isMobile && (
         <div className="w-80 flex-shrink-0 border-r border-border bg-card">
           <div className="h-full overflow-hidden">
             <Sidebar
@@ -782,6 +788,7 @@ function AppContent() {
 
       {/* Version Upgrade Modal */}
       <VersionUpgradeModal />
+      </div>
     </div>
   );
 }
