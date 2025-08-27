@@ -71,6 +71,7 @@ function AppContent() {
     const saved = localStorage.getItem('sendByCtrlEnter');
     return saved !== null ? JSON.parse(saved) : false;
   });
+  const [permissionMode, setPermissionMode] = useState('default');
   // Todo panel state
   const [todos, setTodos] = useState([]);
   const [todoPanelOpen, setTodoPanelOpen] = useState(() => {
@@ -696,6 +697,8 @@ function AppContent() {
           showRawParameters={showRawParameters}
           autoScrollToBottom={autoScrollToBottom}
           sendByCtrlEnter={sendByCtrlEnter}
+          permissionMode={permissionMode}
+          onPermissionModeChange={setPermissionMode}
           todoPanelOpen={todoPanelOpen}
         />
       </div>
@@ -783,6 +786,8 @@ function AppContent() {
             setSendByCtrlEnter(value);
             localStorage.setItem('sendByCtrlEnter', JSON.stringify(value));
           }}
+          permissionMode={permissionMode}
+          onPermissionModeChange={setPermissionMode}
           isMobile={isMobile}
         />
       )}

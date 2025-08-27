@@ -46,6 +46,8 @@ function MainContent({
   showRawParameters,      // Show raw parameters in tool accordions
   autoScrollToBottom,     // Auto-scroll to bottom when new messages arrive
   sendByCtrlEnter,        // Send by Ctrl+Enter mode for East Asian language input
+  permissionMode,         // Current permission mode (default, acceptEdits, bypassPermissions, plan)
+  onPermissionModeChange, // Callback to change permission mode
   todoPanelOpen           // Whether the Task Progress sidebar is open
 }) {
   const [editingFile, setEditingFile] = useState(null);
@@ -302,6 +304,8 @@ function MainContent({
               showRawParameters={showRawParameters}
               autoScrollToBottom={autoScrollToBottom}
               sendByCtrlEnter={sendByCtrlEnter}
+              permissionMode={permissionMode}
+              onPermissionModeChange={onPermissionModeChange}
               todoPanelOpen={todoPanelOpen}
             />
           </ErrorBoundary>

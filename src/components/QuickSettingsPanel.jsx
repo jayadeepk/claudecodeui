@@ -12,7 +12,8 @@ import {
   Brain,
   Sparkles,
   FileText,
-  Languages
+  Languages,
+  Zap
 } from 'lucide-react';
 import DarkModeToggle from './DarkModeToggle';
 import { useTheme } from '../contexts/ThemeContext';
@@ -28,6 +29,8 @@ const QuickSettingsPanel = ({
   onAutoScrollChange,
   sendByCtrlEnter,
   onSendByCtrlEnterChange,
+  permissionMode,
+  onPermissionModeChange,
   isMobile
 }) => {
   const [localIsOpen, setLocalIsOpen] = useState(isOpen);
@@ -44,6 +47,14 @@ const QuickSettingsPanel = ({
     const newState = !localIsOpen;
     setLocalIsOpen(newState);
     onToggle(newState);
+  };
+
+  const handleModeSwitch = () => {
+    if (!onPermissionModeChange) return;
+    const modes = ['default', 'acceptEdits', 'bypassPermissions', 'plan'];
+    const currentIndex = modes.indexOf(permissionMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    onPermissionModeChange(modes[nextIndex]);
   };
 
   return (
@@ -96,6 +107,52 @@ const QuickSettingsPanel = ({
                 <DarkModeToggle />
               </div>
             </div>
+
+            {/* Permission Mode Settings */}
+            {permissionMode && (
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Permission Mode</h4>
+                
+                <button
+                  type="button"
+                  onClick={handleModeSwitch}
+                  className={`w-full p-3 rounded-lg text-sm font-medium border transition-all duration-200 text-left ${
+                    permissionMode === 'default' 
+                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : permissionMode === 'acceptEdits'
+                      ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
+                      : permissionMode === 'bypassPermissions'
+                      ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/30'
+                      : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                  }`}
+                  title="Click to change permission mode"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${
+                      permissionMode === 'default' 
+                        ? 'bg-gray-500'
+                        : permissionMode === 'acceptEdits'
+                        ? 'bg-green-500'
+                        : permissionMode === 'bypassPermissions'
+                        ? 'bg-orange-500'
+                        : 'bg-blue-500'
+                    }`} />
+                    <Zap className="h-4 w-4" />
+                    <div className="flex-1">
+                      <span className="font-medium">
+                        {permissionMode === 'default' && 'Default Mode'}
+                        {permissionMode === 'acceptEdits' && 'Accept Edits'}
+                        {permissionMode === 'bypassPermissions' && 'Bypass Permissions'}
+                        {permissionMode === 'plan' && 'Plan Mode'}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+                <p className="text-xs text-gray-500 dark:text-gray-400 ml-3">
+                  Click to cycle through permission modes. You can also press Tab in the input field.
+                </p>
+              </div>
+            )}
 
             {/* Tool Display Settings */}
             <div className="space-y-2">
