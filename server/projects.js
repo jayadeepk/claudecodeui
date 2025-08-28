@@ -457,7 +457,7 @@ async function parseJsonlSessions(filePath) {
               if (typeof content === 'string' && content.length > 0) {
                 // Skip command messages that start with <command-name>
                 if (!content.startsWith('<command-name>')) {
-                  session.summary = content.length > 80 ? content.substring(0, 80) + '...' : content;
+                  session.summary = content.length > 150 ? content.substring(0, 150) + '...' : content;
                 }
               }
             }

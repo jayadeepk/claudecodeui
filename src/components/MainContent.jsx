@@ -159,7 +159,7 @@ function MainContent({
               <div className="min-w-0">
                 {activeTab === 'chat' && selectedSession ? (
                   <div>
-                    <h2 className={`text-base sm:text-lg font-semibold text-gray-900 dark:text-white ${isMobile ? 'truncate' : ''}`}>
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
                       {selectedSession.__provider === 'cursor' ? (selectedSession.name || 'Untitled Session') : (selectedSession.summary || 'New Session')}
                     </h2>
                     <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
