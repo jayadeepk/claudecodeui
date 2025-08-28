@@ -700,6 +700,9 @@ function AppContent() {
           permissionMode={permissionMode}
           onPermissionModeChange={setPermissionMode}
           todoPanelOpen={todoPanelOpen}
+          onQuickSettingsToggle={setShowQuickSettings}
+          onTodoPanelToggle={setTodoPanelOpen}
+          todos={todos}
         />
       </div>
 
@@ -727,39 +730,15 @@ function AppContent() {
 
       {/* Mobile Todo Panel */}
       {isMobile && activeTab === 'chat' && todos.length > 0 && (
-        <>
-          {/* Pull Tab to open todo panel */}
-          {!todoPanelOpen && (
-            <div className="fixed bottom-44 left-0 z-50 transition-all duration-150 ease-out">
-              <button
-                onClick={() => {
-                  setTodoPanelOpen(true);
-                  localStorage.setItem('todoPanelOpen', JSON.stringify(true));
-                }}
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-r-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shadow-lg relative"
-                aria-label="Open todo panel"
-              >
-                <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-                {todos.filter(t => t.status === 'in_progress').length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                )}
-              </button>
-            </div>
-          )}
-          
-          {/* Todo Panel for mobile */}
-          <TodoPanel
-            todos={todos}
-            isOpen={todoPanelOpen}
-            onToggle={(open) => {
-              setTodoPanelOpen(open);
-              localStorage.setItem('todoPanelOpen', JSON.stringify(open));
-            }}
-            isMobile={true}
-          />
-        </>
+        <TodoPanel
+          todos={todos}
+          isOpen={todoPanelOpen}
+          onToggle={(open) => {
+            setTodoPanelOpen(open);
+            localStorage.setItem('todoPanelOpen', JSON.stringify(open));
+          }}
+          isMobile={true}
+        />
       )}
       {/* Quick Settings Panel - Only show on chat tab */}
       {activeTab === 'chat' && (
