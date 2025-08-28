@@ -197,11 +197,56 @@ function MainContent({
           {isMobile && activeTab === 'chat' && (
             <div className="flex-shrink-0 relative">
               <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation active:scale-95 flex-shrink-0 relative"
+                onClick={(e) => {
+                  // Create ripple effect
+                  const button = e.currentTarget;
+                  const rect = button.getBoundingClientRect();
+                  const ripple = document.createElement('span');
+                  const size = Math.max(rect.width, rect.height) * 2;
+                  const x = rect.width / 2 - size / 2;
+                  const y = rect.height / 2 - size / 2;
+                  
+                  ripple.style.cssText = `
+                    position: absolute;
+                    left: ${x}px;
+                    top: ${y}px;
+                    width: ${size}px;
+                    height: ${size}px;
+                    border-radius: 50%;
+                    background: rgba(147, 197, 253, 0.4);
+                    transform: scale(0);
+                    animation: ripple-animation 0.6s ease-out;
+                    pointer-events: none;
+                    z-index: 0;
+                  `;
+                  
+                  // Add CSS animation if not already added
+                  if (!document.querySelector('#ripple-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'ripple-styles';
+                    style.textContent = `
+                      @keyframes ripple-animation {
+                        to {
+                          transform: scale(1);
+                          opacity: 0;
+                        }
+                      }
+                    `;
+                    document.head.appendChild(style);
+                  }
+                  
+                  button.appendChild(ripple);
+                  
+                  setTimeout(() => {
+                    ripple.remove();
+                  }, 600);
+                  
+                  setShowMobileMenu(!showMobileMenu);
+                }}
+                className="w-11 h-11 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation active:scale-95 flex-shrink-0 relative overflow-hidden"
                 aria-label="More options"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M12 5v.01M12 12v.01M12 19v.01" />
                 </svg>
                 {/* Show badge if there are active todos */}
