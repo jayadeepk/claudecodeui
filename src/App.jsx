@@ -767,6 +767,11 @@ function AppContent() {
           }}
           permissionMode={permissionMode}
           onPermissionModeChange={setPermissionMode}
+          todoPanelOpen={todoPanelOpen}
+          onTodoPanelChange={(value) => {
+            setTodoPanelOpen(value);
+            localStorage.setItem('todoPanelOpen', JSON.stringify(value));
+          }}
           isMobile={isMobile}
         />
       )}
