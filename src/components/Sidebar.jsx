@@ -4,11 +4,12 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 
-import { FolderOpen, Folder, Plus, MessageSquare, Clock, ChevronDown, ChevronRight, Edit3, Check, X, Trash2, Settings, FolderPlus, RefreshCw, Sparkles, Edit2, Star, Search } from 'lucide-react';
+import { FolderOpen, Folder, Plus, MessageSquare, Clock, ChevronDown, ChevronRight, Edit3, Check, X, Trash2, Settings, FolderPlus, RefreshCw, Sparkles, Edit2, Star, Search, LogOut } from 'lucide-react';
 import { cn } from '../lib/utils';
 import ClaudeLogo from './ClaudeLogo';
 import CursorLogo from './CursorLogo.jsx';
 import { api } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 // Move formatTimeAgo outside component to avoid recreation on every render
 const formatTimeAgo = (dateString, currentTime) => {
@@ -53,6 +54,7 @@ function Sidebar({
   currentVersion,
   onShowVersionModal
 }) {
+  const { user, logout } = useAuth();
   const [expandedProjects, setExpandedProjects] = useState(new Set());
   const [editingProject, setEditingProject] = useState(null);
   const [showNewProject, setShowNewProject] = useState(false);
@@ -1314,26 +1316,52 @@ function Sidebar({
       <div className="md:p-2 md:border-t md:border-border flex-shrink-0">
         {/* Mobile Settings */}
         <div className="md:hidden p-4 pb-20 border-t border-border/50">
-          <button
-            className="w-full h-14 bg-muted/50 hover:bg-muted/70 rounded-2xl flex items-center justify-start gap-4 px-4 active:scale-[0.98] transition-all duration-150"
-            onClick={onShowSettings}
-          >
-            <div className="w-10 h-10 rounded-2xl bg-background/80 flex items-center justify-center">
-              <Settings className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <span className="text-lg font-medium text-foreground">Settings</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              className="flex-1 h-14 bg-muted/50 hover:bg-muted/70 rounded-2xl flex items-center justify-start gap-4 px-4 active:scale-[0.98] transition-all duration-150"
+              onClick={onShowSettings}
+            >
+              <div className="w-10 h-10 rounded-2xl bg-background/80 flex items-center justify-center">
+                <Settings className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <span className="text-lg font-medium text-foreground">Settings</span>
+            </button>
+            {user && (
+              <button
+                className="w-14 h-14 bg-red-500/10 hover:bg-red-500/20 rounded-2xl flex items-center justify-center active:scale-[0.98] transition-all duration-150"
+                onClick={logout}
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5 text-red-600" />
+              </button>
+            )}
+          </div>
         </div>
         
         {/* Desktop Settings */}
-        <Button
-          variant="ghost"
-          className="hidden md:flex w-full justify-start gap-2 p-2 h-auto font-normal text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-200"
-          onClick={onShowSettings}
-        >
-          <Settings className="w-3 h-3" />
-          <span className="text-xs">Tools Settings</span>
-        </Button>
+        <div className="hidden md:block">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              className="flex-1 justify-start gap-2 p-2 h-auto font-normal text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-200"
+              onClick={onShowSettings}
+            >
+              <Settings className="w-3 h-3" />
+              <span className="text-xs">Tools Settings</span>
+            </Button>
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                onClick={logout}
+                title="Logout"
+              >
+                <LogOut className="w-3 h-3" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
