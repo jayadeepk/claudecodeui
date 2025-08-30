@@ -8,8 +8,15 @@ export default defineConfig(({ command, mode }) => {
   
   
   return {
+    base: env.BASE_PATH || '/',
     plugins: [
-      react()
+      react(),
+      {
+        name: 'html-transform',
+        transformIndexHtml(html) {
+          return html.replace('%BASE_PATH%', env.BASE_PATH || '')
+        }
+      }
     ],
     server: {
       port: parseInt(env.VITE_PORT) || 5173,
