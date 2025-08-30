@@ -88,7 +88,7 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
   const fetchCursorMcpServers = async () => {
     try {
       const token = localStorage.getItem('auth-token');
-      const response = await fetch('/api/cursor/mcp', {
+      const response = await fetch('./api/cursor/mcp', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -112,7 +112,7 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
       const token = localStorage.getItem('auth-token');
       
       // Try to read directly from config files for complete details
-      const configResponse = await fetch('/api/mcp/config/read', {
+      const configResponse = await fetch('./api/mcp/config/read', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -128,7 +128,7 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
       }
       
       // Fallback to Claude CLI
-      const cliResponse = await fetch('/api/mcp/cli/list', {
+      const cliResponse = await fetch('./api/mcp/cli/list', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -161,7 +161,7 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
       }
       
       // Final fallback to direct config reading
-      const response = await fetch('/api/mcp/servers?scope=user', {
+      const response = await fetch('./api/mcp/servers?scope=user', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -189,7 +189,7 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
       }
       
       // Use Claude CLI to add the server
-      const response = await fetch('/api/mcp/cli/add', {
+      const response = await fetch('./api/mcp/cli/add', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -231,7 +231,7 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
       const token = localStorage.getItem('auth-token');
       
       // Use Claude CLI to remove the server with proper scope
-      const response = await fetch(`/api/mcp/cli/remove/${serverId}?scope=${scope}`, {
+      const response = await fetch(`./api/mcp/cli/remove/${serverId}?scope=${scope}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -260,7 +260,7 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
   const testMcpServer = async (serverId, scope = 'user') => {
     try {
       const token = localStorage.getItem('auth-token');
-      const response = await fetch(`/api/mcp/servers/${serverId}/test?scope=${scope}`, {
+      const response = await fetch(`./api/mcp/servers/${serverId}/test?scope=${scope}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -285,7 +285,7 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
   const discoverMcpTools = async (serverId, scope = 'user') => {
     try {
       const token = localStorage.getItem('auth-token');
-      const response = await fetch(`/api/mcp/servers/${serverId}/tools?scope=${scope}`, {
+      const response = await fetch(`./api/mcp/servers/${serverId}/tools?scope=${scope}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -474,7 +474,7 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
       if (mcpFormData.importMode === 'json') {
         // Use JSON import endpoint
         const token = localStorage.getItem('auth-token');
-        const response = await fetch('/api/mcp/cli/add-json', {
+        const response = await fetch('./api/mcp/cli/add-json', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

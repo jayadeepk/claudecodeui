@@ -1437,7 +1437,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   // Load Cursor default model from config
   useEffect(() => {
     if (provider === 'cursor') {
-      fetch('/api/cursor/config', {
+      fetch('./api/cursor/config', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
         }
@@ -1562,7 +1562,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     if (!projectPath || !sessionId) return [];
     setIsLoadingSessionMessages(true);
     try {
-      const url = `/api/cursor/sessions/${encodeURIComponent(sessionId)}?projectPath=${encodeURIComponent(projectPath)}`;
+      const url = `./api/cursor/sessions/${encodeURIComponent(sessionId)}?projectPath=${encodeURIComponent(projectPath)}`;
       const res = await authenticatedFetch(url);
       if (!res.ok) return [];
       const data = await res.json();
@@ -2924,7 +2924,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           headers['Authorization'] = `Bearer ${token}`;
         }
         
-        const response = await fetch(`/api/projects/${selectedProject.name}/upload-images`, {
+        const response = await fetch(`./api/projects/${selectedProject.name}/upload-images`, {
           method: 'POST',
           headers: headers,
           body: formData

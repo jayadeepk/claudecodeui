@@ -31,7 +31,7 @@ export function useWebSocket() {
       // Fetch server configuration to get the correct WebSocket URL
       let wsBaseUrl;
       try {
-        const configResponse = await fetch('/api/config', {
+        const configResponse = await fetch('./api/config', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

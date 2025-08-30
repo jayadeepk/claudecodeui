@@ -233,7 +233,7 @@ function AppContent() {
       // Always fetch Cursor sessions for each project so we can combine views
       for (let project of data) {
         try {
-          const url = `/api/cursor/sessions?projectPath=${encodeURIComponent(project.fullPath || project.path)}`;
+          const url = `./api/cursor/sessions?projectPath=${encodeURIComponent(project.fullPath || project.path)}`;
           const cursorResponse = await authenticatedFetch(url);
           if (cursorResponse.ok) {
             const cursorData = await cursorResponse.json();
@@ -791,7 +791,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <ProtectedRoute>
-          <Router>
+          <Router basename="/claude">
             <Routes>
               <Route path="/" element={<AppContent />} />
               <Route path="/session/:sessionId" element={<AppContent />} />

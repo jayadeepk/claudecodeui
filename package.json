@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
     "server": "node server/index.js",
-    "client": "vite --host",
-    "build": "vite build",
+    "client": "vite --host --config $(test -f vite.config.local.js && echo vite.config.local.js || echo vite.config.js)",
+    "build": "vite build --config $(test -f vite.config.local.js && echo vite.config.local.js || echo vite.config.js)",
     "preview": "vite preview",
     "start": "npm run build && npm run server"
   },
