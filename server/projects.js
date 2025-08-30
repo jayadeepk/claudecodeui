@@ -440,6 +440,7 @@ async function parseJsonlSessions(filePath) {
               sessions.set(entry.sessionId, {
                 id: entry.sessionId,
                 summary: 'New Session',
+                lastUserMessage: null, // Track last user message for Caveat fallback
                 messageCount: 0,
                 lastActivity: new Date(),
                 cwd: entry.cwd || ''
@@ -451,15 +452,36 @@ async function parseJsonlSessions(filePath) {
             // Update summary if this is a summary entry
             if (entry.type === 'summary' && entry.summary) {
               session.summary = entry.summary;
-            } else if (entry.message?.role === 'user' && entry.message?.content && session.summary === 'New Session') {
-              // Use first user message as summary if no summary entry exists
-              const content = entry.message.content;
+            }
+            
+            // Always track the last user message for potential fallback
+            if (entry.message?.role === 'user' && entry.message?.content) {
+              let content = entry.message.content;
+              
+              // Handle array content format (extract text from first text object)
+              if (Array.isArray(content) && content.length > 0 && content[0].type === 'text') {
+                content = content[0].text;
+              }
+              
               if (typeof content === 'string' && content.length > 0) {
-                // Skip command messages that start with <command-name>
-                if (!content.startsWith('<command-name>')) {
-                  session.summary = content.length > 150 ? content.substring(0, 150) + '...' : content;
+                // Skip system messages, command messages, and caveats
+                if (!content.startsWith('<command-name>') && 
+                    !content.startsWith('<command-message>') && 
+                    !content.startsWith('Caveat:') && 
+                    !content.startsWith('<local-command-') &&
+                    !content.startsWith('<bash-') &&
+                    !content.startsWith('</bash-') &&
+                    !content.includes('<local-command-stdout>') &&
+                    !content.includes('<system-reminder>') &&
+                    !content.includes('[Request interrupted by user for tool use]')) {
+                  session.lastUserMessage = content.length > 150 ? content.substring(0, 150) + '...' : content;
                 }
               }
+            }
+            
+            // Use last user message as summary if no summary entry exists
+            if (session.summary === 'New Session' && session.lastUserMessage) {
+              session.summary = session.lastUserMessage;
             }
             
             // Count messages instead of storing them all
@@ -481,8 +503,22 @@ async function parseJsonlSessions(filePath) {
     console.error('Error reading JSONL file:', error);
   }
   
-  // Convert Map to Array and sort by last activity
-  return Array.from(sessions.values()).sort((a, b) => 
+  // Post-process sessions to handle "Caveat:" fallback
+  const processedSessions = Array.from(sessions.values()).map(session => {
+    // If summary starts with "Caveat:" and we have a last user message, use that instead
+    if (session.summary && session.summary.startsWith('Caveat:') && session.lastUserMessage) {
+      console.log(`[Caveat Fallback] Replacing summary for session ${session.id}: "${session.summary.substring(0, 50)}..." -> "${session.lastUserMessage.substring(0, 50)}..."`);
+      session.summary = session.lastUserMessage;
+    }
+    
+    // Clean up the temporary lastUserMessage field
+    delete session.lastUserMessage;
+    
+    return session;
+  });
+  
+  // Sort by last activity and return
+  return processedSessions.sort((a, b) => 
     new Date(b.lastActivity) - new Date(a.lastActivity)
   );
 }
