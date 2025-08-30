@@ -133,3 +133,6 @@ dev-debug.log
 *.crt
 *.key
 openssl.conf
+
+# Local configuration overrides
+vite.config.local.js
