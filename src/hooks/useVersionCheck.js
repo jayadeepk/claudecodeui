@@ -7,6 +7,13 @@ export const useVersionCheck = (owner, repo) => {
   const [latestVersion, setLatestVersion] = useState(null);
 
   useEffect(() => {
+    // Check if version checking is disabled
+    if (import.meta.env.VITE_DISABLE_VERSION_CHECK === 'true') {
+      setUpdateAvailable(false);
+      setLatestVersion(null);
+      return;
+    }
+
     const checkVersion = async () => {
       try {
         const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`);
