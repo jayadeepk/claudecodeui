@@ -187,12 +187,13 @@ app.use(express.static(path.join(__dirname, '../dist')));
 app.get('/api/config', authenticateToken, (req, res) => {
     const host = req.headers.host || `${req.hostname}:${PORT}`;
     const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'wss' : 'ws';
+    const basePath = process.env.BASE_PATH || '';
 
-    console.log('Config API called - Returning host:', host, 'Protocol:', protocol);
+    console.log('Config API called - Returning host:', host, 'Protocol:', protocol, 'BasePath:', basePath);
 
     res.json({
         serverPort: PORT,
-        wsUrl: `${protocol}://${host}`
+        wsUrl: `${protocol}://${host}${basePath}`
     });
 });
 
