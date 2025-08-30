@@ -455,7 +455,7 @@ async function parseJsonlSessions(filePath) {
             }
             
             // Always track the last user message for potential fallback
-            if (entry.message?.role === 'user' && entry.message?.content) {
+            if (entry.message?.role === 'user' && entry.message?.content && !entry.isMeta) {
               let content = entry.message.content;
               
               // Handle array content format (extract text from first text object)
@@ -464,15 +464,13 @@ async function parseJsonlSessions(filePath) {
               }
               
               if (typeof content === 'string' && content.length > 0) {
-                // Skip system messages, command messages, and caveats
+                // Skip system messages and command messages
                 if (!content.startsWith('<command-name>') && 
                     !content.startsWith('<command-message>') && 
-                    !content.startsWith('Caveat:') && 
                     !content.startsWith('<local-command-') &&
                     !content.startsWith('<bash-') &&
                     !content.startsWith('</bash-') &&
                     !content.includes('<local-command-stdout>') &&
-                    !content.includes('<system-reminder>') &&
                     !content.includes('[Request interrupted by user for tool use]')) {
                   session.lastUserMessage = content.length > 150 ? content.substring(0, 150) + '...' : content;
                 }
