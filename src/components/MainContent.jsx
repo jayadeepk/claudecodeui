@@ -54,7 +54,6 @@ function MainContent({
   todos                   // Todo items for showing badge count
 }) {
   const [editingFile, setEditingFile] = useState(null);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const handleFileOpen = (filePath, diffInfo = null) => {
     // Create a file object that CodeEditor expects
@@ -193,116 +192,48 @@ function MainContent({
             </div>
           </div>
           
-          {/* Mobile 3-dots Menu - Only show on mobile chat tab */}
-          {isMobile && activeTab === 'chat' && (
-            <div className="flex-shrink-0 relative">
-              <button
-                onClick={(e) => {
-                  // Create ripple effect
-                  const button = e.currentTarget;
-                  const rect = button.getBoundingClientRect();
-                  const ripple = document.createElement('span');
-                  const size = Math.max(rect.width, rect.height) * 2;
-                  const x = rect.width / 2 - size / 2;
-                  const y = rect.height / 2 - size / 2;
-                  
-                  ripple.style.cssText = `
-                    position: absolute;
-                    left: ${x}px;
-                    top: ${y}px;
-                    width: ${size}px;
-                    height: ${size}px;
-                    border-radius: 50%;
-                    background: rgba(147, 197, 253, 0.4);
-                    transform: scale(0);
-                    animation: ripple-animation 0.6s ease-out;
-                    pointer-events: none;
-                    z-index: 0;
-                  `;
-                  
-                  // Add CSS animation if not already added
-                  if (!document.querySelector('#ripple-styles')) {
-                    const style = document.createElement('style');
-                    style.id = 'ripple-styles';
-                    style.textContent = `
-                      @keyframes ripple-animation {
-                        to {
-                          transform: scale(1);
-                          opacity: 0;
-                        }
-                      }
-                    `;
-                    document.head.appendChild(style);
-                  }
-                  
-                  button.appendChild(ripple);
-                  
-                  setTimeout(() => {
-                    ripple.remove();
-                  }, 600);
-                  
-                  setShowMobileMenu(!showMobileMenu);
-                }}
-                className="w-11 h-11 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation active:scale-95 flex-shrink-0 relative overflow-hidden"
-                aria-label="More options"
-              >
-                <svg className="w-6 h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M12 5v.01M12 12v.01M12 19v.01" />
-                </svg>
-                {/* Show badge if there are active todos */}
-                {todos && todos.some(t => t.status === 'in_progress') && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                )}
-              </button>
-              
-              {/* Dropdown Menu */}
-              {showMobileMenu && (
-                <>
-                  {/* Backdrop */}
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setShowMobileMenu(false)}
-                  />
-                  {/* Menu */}
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          setShowMobileMenu(false);
-                          onQuickSettingsToggle && onQuickSettingsToggle(true);
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Quick Settings
-                      </button>
-                      {todos && todos.length > 0 && (
-                        <button
-                          onClick={() => {
-                            setShowMobileMenu(false);
-                            if (onTodoPanelToggle) {
-                              onTodoPanelToggle(true);
-                              localStorage.setItem('todoPanelOpen', JSON.stringify(true));
-                            }
-                          }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                          </svg>
-                          Task Progress
-                          {todos.some(t => t.status === 'in_progress') && (
-                            <span className="ml-auto w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </>
+          {/* Mobile Action Buttons */}
+          {isMobile && (
+            <div className="flex-shrink-0 flex items-center gap-2">
+              {/* Task Progress Toggle - Only show in chat tab */}
+              {activeTab === 'chat' && todos && todos.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (onTodoPanelToggle) {
+                      onTodoPanelToggle(!todoPanelOpen);
+                      localStorage.setItem('todoPanelOpen', JSON.stringify(!todoPanelOpen));
+                    }
+                  }}
+                  className={`p-2.5 rounded-full touch-manipulation active:scale-95 flex-shrink-0 relative transition-colors ${
+                    todoPanelOpen 
+                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' 
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  title={todoPanelOpen ? 'Hide Task Progress' : 'Show Task Progress'}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  {/* Show badge if there are active todos */}
+                  {todos.some(t => t.status === 'in_progress') && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                  )}
+                </button>
               )}
+              
+              {/* Quick Settings Toggle - Show in all tabs */}
+              <button
+                onClick={() => {
+                  onQuickSettingsToggle && onQuickSettingsToggle(true);
+                }}
+                className="p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation active:scale-95 flex-shrink-0"
+                title="Quick Settings"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
             </div>
           )}
           
