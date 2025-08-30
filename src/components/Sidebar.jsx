@@ -49,6 +49,7 @@ function Sidebar({
   isLoading,
   onRefresh,
   onShowSettings,
+  onNavigateHome,
   updateAvailable,
   latestVersion,
   currentVersion,
@@ -425,15 +426,19 @@ function Sidebar({
       <div className="md:p-4 md:border-b md:border-border">
         {/* Desktop Header */}
         <div className="hidden md:flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+          <button 
+            onClick={onNavigateHome}
+            className="flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg p-2 -m-2 transition-colors cursor-pointer group"
+            title="Go to homepage"
+          >
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
               <MessageSquare className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-foreground">Claude Code UI</h1>
               <p className="text-sm text-muted-foreground">AI coding assistant interface</p>
             </div>
-          </div>
+          </button>
           <div className="flex gap-2">
             <Button
               variant="ghost"
@@ -467,15 +472,19 @@ function Sidebar({
         {/* Mobile Header */}
         <div className="md:hidden p-3 border-b border-border">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <button 
+              onClick={onNavigateHome}
+              className="flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg p-2 -m-2 transition-colors cursor-pointer group touch-manipulation active:scale-95"
+              title="Go to homepage"
+            >
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center group-hover:shadow-md transition-shadow">
                 <MessageSquare className="w-4 h-4 text-primary-foreground" />
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-foreground">Claude Code UI</h1>
                 <p className="text-sm text-muted-foreground">Projects</p>
               </div>
-            </div>
+            </button>
             <div className="flex gap-2">
               <button
                 className="w-8 h-8 rounded-md bg-background border border-border flex items-center justify-center active:scale-95 transition-all duration-150"

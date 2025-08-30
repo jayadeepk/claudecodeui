@@ -618,6 +618,11 @@ function AppContent() {
               isLoading={isLoadingProjects}
               onRefresh={handleSidebarRefresh}
               onShowSettings={() => setShowToolsSettings(true)}
+              onNavigateHome={() => {
+                setSelectedProject(null);
+                setSelectedSession(null);
+                navigate('/');
+              }}
               updateAvailable={updateAvailable}
               latestVersion={latestVersion}
               currentVersion={currentVersion}
@@ -663,6 +668,11 @@ function AppContent() {
               isLoading={isLoadingProjects}
               onRefresh={handleSidebarRefresh}
               onShowSettings={() => setShowToolsSettings(true)}
+              onNavigateHome={() => {
+                setSelectedProject(null);
+                setSelectedSession(null);
+                navigate('/');
+              }}
               updateAvailable={updateAvailable}
               latestVersion={latestVersion}
               currentVersion={currentVersion}
