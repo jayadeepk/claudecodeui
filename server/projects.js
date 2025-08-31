@@ -65,9 +65,29 @@ import crypto from 'crypto';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import os from 'os';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Cache for extracted project directories
 const projectDirectoryCache = new Map();
+
+// Get session summary filter prefixes from environment
+function getFilterPrefixes() {
+  const prefixesEnv = process.env.SESSION_SUMMARY_FILTER_PREFIXES || '';
+  return prefixesEnv.split(',').map(prefix => prefix.trim()).filter(prefix => prefix.length > 0);
+}
+
+// Check if content should be filtered based on configured prefixes
+function shouldFilterContent(content) {
+  if (typeof content !== 'string' || content.length === 0) {
+    return true;
+  }
+  
+  const filterPrefixes = getFilterPrefixes();
+  return filterPrefixes.some(prefix => content.startsWith(prefix));
+}
 
 // Clear cache when needed (called when project files change)
 function clearProjectDirectoryCache() {
@@ -509,13 +529,8 @@ async function parseJsonlSessions(filePath) {
               }
               
               if (typeof content === 'string' && content.length > 0) {
-                // Skip system messages and command messages
-                if (!content.startsWith('<command-name>') && 
-                    !content.startsWith('<command-message>') && 
-                    !content.startsWith('<local-command-') &&
-                    !content.startsWith('<bash-') &&
-                    !content.startsWith('</bash-') &&
-                    !content.startsWith('[Request interrupted by user')) {
+                // Skip system messages and command messages using configurable filters
+                if (!shouldFilterContent(content)) {
                   session.lastUserMessage = content.length > 150 ? content.substring(0, 150) + '...' : content;
                 }
               }
