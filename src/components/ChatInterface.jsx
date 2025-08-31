@@ -3272,10 +3272,21 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           <div className="flex items-center justify-center h-full">
             {!selectedSession && !currentSessionId && (
               <div className="text-center px-6 sm:px-4 py-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Choose Your AI Assistant</h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-8">
-                  Select a provider to start a new conversation
-                </p>
+                {isCursorDisabled() ? (
+                  <>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Start a New Conversation</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-8">
+                      Begin chatting with Claude Code
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Choose Your AI Assistant</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-8">
+                      Select a provider to start a new conversation
+                    </p>
+                  </>
+                )}
                 
                 <div className={`flex ${isCursorDisabled() ? 'justify-center' : 'flex-col sm:flex-row'} gap-4 justify-center items-center mb-8`}>
                   {/* Claude Button */}
