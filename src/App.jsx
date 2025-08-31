@@ -762,9 +762,8 @@ function AppContent() {
           isMobile={true}
         />
       )}
-      {/* Quick Settings Panel - Only show on chat tab */}
-      {activeTab === 'chat' && (
-        <QuickSettingsPanel
+      {/* Quick Settings Panel - Show in all tabs */}
+      <QuickSettingsPanel
           isOpen={showQuickSettings}
           onToggle={setShowQuickSettings}
           autoExpandTools={autoExpandTools}
@@ -796,7 +795,6 @@ function AppContent() {
           }}
           isMobile={isMobile}
         />
-      )}
 
       {/* Tools Settings Modal */}
       <ToolsSettings
