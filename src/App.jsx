@@ -51,6 +51,10 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'files'
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('desktopSidebarOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showToolsSettings, setShowToolsSettings] = useState(false);
@@ -602,8 +606,8 @@ function AppContent() {
       
       {/* Main App Content */}
       <div className="flex flex-1 min-h-0">
-        {/* Fixed Desktop Sidebar */}
-        {!isMobile && (
+        {/* Desktop Sidebar - Collapsible */}
+        {!isMobile && desktopSidebarOpen && (
         <div className="w-80 flex-shrink-0 border-r border-border bg-card">
           <div className="h-full overflow-hidden">
             <Sidebar
@@ -693,7 +697,15 @@ function AppContent() {
           sendMessage={sendMessage}
           messages={messages}
           isMobile={isMobile}
-          onMenuClick={() => setSidebarOpen(true)}
+          onMenuClick={() => {
+            if (isMobile) {
+              setSidebarOpen(true);
+            } else {
+              const newState = !desktopSidebarOpen;
+              setDesktopSidebarOpen(newState);
+              localStorage.setItem('desktopSidebarOpen', JSON.stringify(newState));
+            }
+          }}
           isLoading={isLoadingProjects}
           onInputFocusChange={setIsInputFocused}
           onSessionActive={markSessionAsActive}
