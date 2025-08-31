@@ -515,7 +515,6 @@ async function parseJsonlSessions(filePath) {
                     !content.startsWith('<local-command-') &&
                     !content.startsWith('<bash-') &&
                     !content.startsWith('</bash-') &&
-                    !content.includes('<local-command-stdout>') &&
                     !content.startsWith('[Request interrupted by user')) {
                   session.lastUserMessage = content.length > 150 ? content.substring(0, 150) + '...' : content;
                 }
