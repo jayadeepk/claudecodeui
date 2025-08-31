@@ -453,10 +453,86 @@ async function getSessions(projectName, limit = 5, offset = 0) {
       }
     }
     
-    // Filter out parent sessions that have been resumed
+    // Filter out subset sessions by analyzing parentUuid chains
+    const sessionMessages = new Map();
+    
+    // Load all session messages to analyze parentUuid chains
+    for (const session of allSessions.values()) {
+      try {
+        // Find the JSONL file for this session
+        const sessionFile = path.join(projectDir, `${session.id}.jsonl`);
+        try {
+          await fs.access(sessionFile);
+          const fileContent = await fs.readFile(sessionFile, 'utf8');
+          const lines = fileContent.trim().split('\n').filter(line => line.trim());
+          const messages = [];
+          
+          for (const line of lines) {
+            try {
+              const parsed = JSON.parse(line);
+              if (parsed.uuid && (parsed.type === 'user' || parsed.type === 'assistant')) {
+                messages.push(parsed);
+              }
+            } catch (parseError) {
+              // Skip invalid JSON lines
+            }
+          }
+          
+          sessionMessages.set(session.id, messages);
+          console.log(`[DEBUG] Loaded ${messages.length} messages for session ${session.id.slice(0,8)}`);
+        } catch (fileError) {
+          sessionMessages.set(session.id, []);
+        }
+      } catch (error) {
+        console.warn(`Could not load messages for session ${session.id}:`, error.message);
+        sessionMessages.set(session.id, []);
+      }
+    }
+    
+    // Find sessions that are subsets of other sessions based on shared parentUuids
+    const sessionsToFilter = new Set();
+    const sessionArray = Array.from(allSessions.values());
+    
+    console.log(`[DEBUG] Analyzing ${sessionArray.length} sessions for subset relationships`);
+    
+    for (let i = 0; i < sessionArray.length; i++) {
+      for (let j = i + 1; j < sessionArray.length; j++) {
+        const session1 = sessionArray[i];
+        const session2 = sessionArray[j];
+        const messages1 = sessionMessages.get(session1.id) || [];
+        const messages2 = sessionMessages.get(session2.id) || [];
+        
+        // Get parentUuids for both sessions
+        const uuids1 = new Set(messages1.map(m => m.uuid));
+        const uuids2 = new Set(messages2.map(m => m.uuid));
+        
+        // Check if one session is a subset of another
+        const uuids1Array = Array.from(uuids1);
+        const uuids2Array = Array.from(uuids2);
+        
+        console.log(`[DEBUG] Comparing sessions ${session1.id.slice(0,8)} (${uuids1Array.length} msgs) vs ${session2.id.slice(0,8)} (${uuids2Array.length} msgs)`);
+        
+        if (uuids1Array.length > 0 && uuids2Array.length > 0) {
+          // If all uuids of session2 are in session1, session2 is a subset
+          if (uuids2Array.every(uuid => uuids1.has(uuid))) {
+            console.log(`[DEBUG] Session ${session2.id.slice(0,8)} is subset of ${session1.id.slice(0,8)} - filtering out`);
+            sessionsToFilter.add(session2.id);
+          }
+          // If all uuids of session1 are in session2, session1 is a subset  
+          else if (uuids1Array.every(uuid => uuids2.has(uuid))) {
+            console.log(`[DEBUG] Session ${session1.id.slice(0,8)} is subset of ${session2.id.slice(0,8)} - filtering out`);
+            sessionsToFilter.add(session1.id);
+          }
+        }
+      }
+    }
+    
+    console.log(`[DEBUG] Found ${sessionsToFilter.size} sessions to filter out:`, Array.from(sessionsToFilter).map(id => id.slice(0,8)));
+    
+    // Filter out subset sessions and also check hierarchy file as fallback
     const parentSessions = new Set(Object.values(hierarchy).map(h => h.parentSessionId));
     const filteredSessions = Array.from(allSessions.values()).filter(session => 
-      !parentSessions.has(session.id)
+      !parentSessions.has(session.id) && !sessionsToFilter.has(session.id)
     );
     
     // Convert to array and sort by last activity
