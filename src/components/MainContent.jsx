@@ -128,7 +128,7 @@ function MainContent({
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-gray-500 dark:text-gray-400 max-w-md mx-auto px-6">
+          <div className="text-center text-gray-500 dark:text-gray-400 max-w-lg mx-auto px-6">
             <div className="w-16 h-16 mx-auto mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z" />
@@ -136,7 +136,8 @@ function MainContent({
             </div>
             <h2 className="text-2xl font-semibold mb-3 text-gray-900 dark:text-white">Choose Your Project</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-              Select a project from the sidebar to start coding with Claude. Each project contains your chat sessions and file history.
+              Select a project from the sidebar to start coding with Claude.<br />
+              Each project contains your chat sessions and file history.
             </p>
           </div>
         </div>
