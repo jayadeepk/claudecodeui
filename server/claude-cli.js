@@ -279,6 +279,14 @@ async function spawnClaude(command, options = {}, ws) {
                 type: 'session-created',
                 sessionId: capturedSessionId
               }));
+            } else if (sessionId && resume && !sessionCreatedSent) {
+              // For resumed sessions, send session-resumed event instead
+              sessionCreatedSent = true;
+              ws.send(JSON.stringify({
+                type: 'session-resumed',
+                sessionId: capturedSessionId,
+                parentSessionId: sessionId
+              }));
             }
           }
           

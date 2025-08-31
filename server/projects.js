@@ -86,6 +86,42 @@ async function loadProjectConfig() {
   }
 }
 
+// Load session hierarchy (tracks which sessions are resumed from others)
+async function loadSessionHierarchy() {
+  const hierarchyPath = path.join(process.env.HOME, '.claude', 'session-hierarchy.json');
+  try {
+    const hierarchyData = await fs.readFile(hierarchyPath, 'utf8');
+    return JSON.parse(hierarchyData);
+  } catch (error) {
+    // Return empty hierarchy if file doesn't exist
+    return {};
+  }
+}
+
+// Save session hierarchy
+async function saveSessionHierarchy(hierarchy) {
+  const claudeDir = path.join(process.env.HOME, '.claude');
+  const hierarchyPath = path.join(claudeDir, 'session-hierarchy.json');
+  
+  // Ensure the .claude directory exists
+  try {
+    await fs.mkdir(claudeDir, { recursive: true });
+  } catch (error) {
+    if (error.code !== 'EEXIST') {
+      throw error;
+    }
+  }
+  
+  await fs.writeFile(hierarchyPath, JSON.stringify(hierarchy, null, 2), 'utf8');
+}
+
+// Record a session resume relationship
+async function recordSessionResume(childSessionId, parentSessionId) {
+  const hierarchy = await loadSessionHierarchy();
+  hierarchy[childSessionId] = { parentSessionId, resumedAt: new Date().toISOString() };
+  await saveSessionHierarchy(hierarchy);
+}
+
 // Save project configuration file
 async function saveProjectConfig(config) {
   const claudeDir = path.join(process.env.HOME, '.claude');
@@ -359,6 +395,9 @@ async function getSessions(projectName, limit = 5, offset = 0) {
       return { sessions: [], hasMore: false, total: 0 };
     }
     
+    // Load session hierarchy to filter out parent sessions
+    const hierarchy = await loadSessionHierarchy();
+    
     // For performance, get file stats to sort by modification time
     const filesWithStats = await Promise.all(
       jsonlFiles.map(async (file) => {
@@ -394,8 +433,14 @@ async function getSessions(projectName, limit = 5, offset = 0) {
       }
     }
     
+    // Filter out parent sessions that have been resumed
+    const parentSessions = new Set(Object.values(hierarchy).map(h => h.parentSessionId));
+    const filteredSessions = Array.from(allSessions.values()).filter(session => 
+      !parentSessions.has(session.id)
+    );
+    
     // Convert to array and sort by last activity
-    const sortedSessions = Array.from(allSessions.values()).sort((a, b) => 
+    const sortedSessions = filteredSessions.sort((a, b) => 
       new Date(b.lastActivity) - new Date(a.lastActivity)
     );
     
@@ -471,7 +516,7 @@ async function parseJsonlSessions(filePath) {
                     !content.startsWith('<bash-') &&
                     !content.startsWith('</bash-') &&
                     !content.includes('<local-command-stdout>') &&
-                    !content.includes('[Request interrupted by user for tool use]')) {
+                    !content.startsWith('[Request interrupted by user')) {
                   session.lastUserMessage = content.length > 150 ? content.substring(0, 150) + '...' : content;
                 }
               }
@@ -877,5 +922,8 @@ export {
   loadProjectConfig,
   saveProjectConfig,
   extractProjectDirectory,
-  clearProjectDirectoryCache
+  clearProjectDirectoryCache,
+  loadSessionHierarchy,
+  saveSessionHierarchy,
+  recordSessionResume
 };

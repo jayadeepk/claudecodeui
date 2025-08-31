@@ -103,6 +103,16 @@ async function spawnCursor(command, options = {}, ws) {
                       model: response.model,
                       cwd: response.cwd
                     }));
+                  } else if (sessionId && resume && !sessionCreatedSent) {
+                    // For resumed sessions, send session-resumed event instead
+                    sessionCreatedSent = true;
+                    ws.send(JSON.stringify({
+                      type: 'session-resumed',
+                      sessionId: capturedSessionId,
+                      parentSessionId: sessionId,
+                      model: response.model,
+                      cwd: response.cwd
+                    }));
                   }
                 }
                 

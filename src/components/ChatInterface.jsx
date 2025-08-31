@@ -2184,6 +2184,30 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
             }
           }
           break;
+
+        case 'session-resumed':
+          // Session resumed - Claude created a new session that extends the old one
+          // Record the parent-child relationship for filtering
+          if (latestMessage.sessionId && latestMessage.parentSessionId) {
+            // Record this relationship on the backend
+            fetch('/api/projects/record-session-resume', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                childSessionId: latestMessage.sessionId,
+                parentSessionId: latestMessage.parentSessionId
+              })
+            }).catch(console.error);
+
+            // Update current session for the UI
+            sessionStorage.setItem('pendingSessionId', latestMessage.sessionId);
+            if (onReplaceTemporarySession) {
+              onReplaceTemporarySession(latestMessage.sessionId);
+            }
+          }
+          break;
           
         case 'claude-response':
           const messageData = latestMessage.data.message || latestMessage.data;

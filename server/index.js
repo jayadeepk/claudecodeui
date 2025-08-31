@@ -36,7 +36,7 @@ import pty from 'node-pty';
 import fetch from 'node-fetch';
 import mime from 'mime-types';
 
-import { getProjects, getSessions, getSessionMessages, renameProject, deleteSession, deleteProject, addProjectManually, extractProjectDirectory, clearProjectDirectoryCache } from './projects.js';
+import { getProjects, getSessions, getSessionMessages, renameProject, deleteSession, deleteProject, addProjectManually, extractProjectDirectory, clearProjectDirectoryCache, recordSessionResume } from './projects.js';
 import { spawnClaude, abortClaudeSession } from './claude-cli.js';
 import { spawnCursor, abortCursorSession } from './cursor-cli.js';
 import gitRoutes from './routes/git.js';
@@ -257,6 +257,17 @@ app.delete('/api/projects/:projectName/sessions/:sessionId', authenticateToken, 
     try {
         const { projectName, sessionId } = req.params;
         await deleteSession(projectName, sessionId);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Record session resume relationship endpoint
+app.post('/api/projects/record-session-resume', authenticateToken, async (req, res) => {
+    try {
+        const { childSessionId, parentSessionId } = req.body;
+        await recordSessionResume(childSessionId, parentSessionId);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
