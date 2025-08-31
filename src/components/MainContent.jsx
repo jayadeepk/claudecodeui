@@ -224,8 +224,12 @@ function MainContent({
             </div>
           )}
           
-          {/* Modern Tab Navigation - Right Side */}
-          <div className="flex-shrink-0 hidden sm:block">
+          {/* Desktop Action Buttons and Tab Navigation */}
+          <div className="flex-shrink-0 hidden sm:flex items-center gap-3">
+            {/* Quick Settings Toggle - Desktop */}
+            <QuickSettingsButton onClick={onQuickSettingsToggle} />
+            
+            {/* Modern Tab Navigation */}
             <div className="relative flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
               <button
                 onClick={() => setActiveTab('chat')}
