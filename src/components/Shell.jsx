@@ -3,6 +3,7 @@ import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { ClipboardAddon } from '@xterm/addon-clipboard';
 import { WebglAddon } from '@xterm/addon-webgl';
+import { useTheme } from '../contexts/ThemeContext';
 import 'xterm/css/xterm.css';
 
 // CSS to remove xterm focus outline
@@ -30,6 +31,7 @@ if (typeof document !== 'undefined') {
 const shellSessions = new Map();
 
 function Shell({ selectedProject, selectedSession, isActive }) {
+  const { isDarkMode } = useTheme();
   const terminalRef = useRef(null);
   const terminal = useRef(null);
   const fitAddon = useRef(null);
@@ -39,6 +41,7 @@ function Shell({ selectedProject, selectedSession, isActive }) {
   const [isRestarting, setIsRestarting] = useState(false);
   const [lastSessionId, setLastSessionId] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [themeChangeKey, setThemeChangeKey] = useState(0);
 
   // Connect to shell function
   const connectToShell = () => {
@@ -200,17 +203,16 @@ function Shell({ selectedProject, selectedSession, isActive }) {
       windowsMode: false,
       macOptionIsMeta: true,
       macOptionClickForcesSelection: false,
-      // Enhanced theme with full 16-color ANSI support + true colors
-      theme: {
-        // Basic colors
+      // Enhanced theme with responsive light/dark mode support
+      theme: isDarkMode ? {
+        // Dark theme - VS Code Dark+ inspired
         background: '#1e1e1e',
         foreground: '#d4d4d4',
         cursor: '#ffffff',
         cursorAccent: '#1e1e1e',
         selection: '#264f78',
         selectionForeground: '#ffffff',
-        
-        // Standard ANSI colors (0-7)
+        // Standard ANSI colors for dark theme
         black: '#000000',
         red: '#cd3131',
         green: '#0dbc79',
@@ -219,8 +221,6 @@ function Shell({ selectedProject, selectedSession, isActive }) {
         magenta: '#bc3fbc',
         cyan: '#11a8cd',
         white: '#e5e5e5',
-        
-        // Bright ANSI colors (8-15)
         brightBlack: '#666666',
         brightRed: '#f14c4c',
         brightGreen: '#23d18b',
@@ -228,16 +228,32 @@ function Shell({ selectedProject, selectedSession, isActive }) {
         brightBlue: '#3b8eea',
         brightMagenta: '#d670d6',
         brightCyan: '#29b8db',
-        brightWhite: '#ffffff',
-        
-        // Extended colors for better Claude output
-        extendedAnsi: [
-          // 16-color palette extension for 256-color support
-          '#000000', '#800000', '#008000', '#808000',
-          '#000080', '#800080', '#008080', '#c0c0c0',
-          '#808080', '#ff0000', '#00ff00', '#ffff00',
-          '#0000ff', '#ff00ff', '#00ffff', '#ffffff'
-        ]
+        brightWhite: '#ffffff'
+      } : {
+        // Light theme - clean and readable
+        background: '#ffffff',
+        foreground: '#333333',
+        cursor: '#000000',
+        cursorAccent: '#ffffff',
+        selection: '#b3d4fc',
+        selectionForeground: '#000000',
+        // Standard ANSI colors for light theme
+        black: '#000000',
+        red: '#cd3131',
+        green: '#00aa00',
+        yellow: '#aa5500',
+        blue: '#0451a5',
+        magenta: '#bc05bc',
+        cyan: '#0598bc',
+        white: '#555555',
+        brightBlack: '#666666',
+        brightRed: '#cd3131',
+        brightGreen: '#14ce14',
+        brightYellow: '#b5ba00',
+        brightBlue: '#0451a5',
+        brightMagenta: '#bc05bc',
+        brightCyan: '#0598bc',
+        brightWhite: '#a5a5a5'
       }
     });
 
@@ -355,7 +371,50 @@ function Shell({ selectedProject, selectedSession, isActive }) {
         }
       }
     };
-  }, [terminalRef.current, selectedProject, selectedSession, isRestarting]);
+  }, [terminalRef.current, selectedProject, selectedSession, isRestarting, isDarkMode, themeChangeKey]);
+
+  // Update terminal theme when isDarkMode changes by recreating the terminal
+  useEffect(() => {
+    if (!terminal.current || !isInitialized) return;
+
+    // Force terminal recreation when theme changes by clearing and reinitializing
+    const wasConnected = isConnected;
+    const currentSessionKey = selectedSession?.id || `project-${selectedProject?.name}`;
+    
+    // Store current session for reuse but mark for theme update
+    if (shellSessions.has(currentSessionKey)) {
+      const session = shellSessions.get(currentSessionKey);
+      // Dispose the old terminal to force recreation with new theme
+      if (session.terminal) {
+        session.terminal.dispose();
+      }
+      shellSessions.delete(currentSessionKey);
+    }
+    
+    // Dispose current terminal
+    if (terminal.current) {
+      terminal.current.dispose();
+      terminal.current = null;
+      fitAddon.current = null;
+    }
+    
+    // Reset initialization to trigger recreation with new theme
+    setIsInitialized(false);
+    
+    // Close WebSocket connection to allow clean reconnection
+    if (ws.current) {
+      ws.current.close();
+      ws.current = null;
+    }
+    
+    setIsConnected(false);
+    
+    // Trigger re-initialization with a small delay
+    setTimeout(() => {
+      setThemeChangeKey(prev => prev + 1);
+    }, 100);
+    
+  }, [isDarkMode]);
 
   // Fit terminal when tab becomes active
   useEffect(() => {
@@ -525,9 +584,9 @@ function Shell({ selectedProject, selectedSession, isActive }) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 w-full">
+    <div className={`h-full flex flex-col w-full ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       {/* Header */}
-      <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-2">
+      <div className={`flex-shrink-0 px-4 py-2 border-b ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-300'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -586,14 +645,14 @@ function Shell({ selectedProject, selectedSession, isActive }) {
         
         {/* Loading state */}
         {!isInitialized && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-90">
-            <div className="text-white">Loading terminal...</div>
+          <div className={`absolute inset-0 flex items-center justify-center bg-opacity-90 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+            <div className={isDarkMode ? 'text-white' : 'text-gray-900'}>Loading terminal...</div>
           </div>
         )}
         
         {/* Connect button when not connected */}
         {isInitialized && !isConnected && !isConnecting && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-90 p-4">
+          <div className={`absolute inset-0 flex items-center justify-center bg-opacity-90 p-4 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
             <div className="text-center max-w-sm w-full">
               <button
                 onClick={connectToShell}
@@ -605,7 +664,7 @@ function Shell({ selectedProject, selectedSession, isActive }) {
                 </svg>
                 <span>Continue in Shell</span>
               </button>
-              <p className="text-gray-400 text-sm mt-3 px-2">
+              <p className={`text-sm mt-3 px-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 {selectedSession ? 
                   (() => {
                     const displaySessionName = selectedSession.__provider === 'cursor'
@@ -622,13 +681,13 @@ function Shell({ selectedProject, selectedSession, isActive }) {
         
         {/* Connecting state */}
         {isConnecting && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-90 p-4">
+          <div className={`absolute inset-0 flex items-center justify-center bg-opacity-90 p-4 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
             <div className="text-center max-w-sm w-full">
               <div className="flex items-center justify-center space-x-3 text-yellow-400">
                 <div className="w-6 h-6 animate-spin rounded-full border-2 border-yellow-400 border-t-transparent"></div>
                 <span className="text-base font-medium">Connecting to shell...</span>
               </div>
-              <p className="text-gray-400 text-sm mt-3 px-2">
+              <p className={`text-sm mt-3 px-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Starting Claude CLI in {selectedProject.displayName}
               </p>
             </div>
