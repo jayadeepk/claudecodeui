@@ -4,6 +4,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { X, Plus, Settings, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Globe, Terminal, Zap, FolderOpen } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { isCursorDisabled } from '../utils/featureFlags.js';
 
 function ToolsSettings({ isOpen, onClose, projects = [] }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -311,6 +312,13 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
       loadSettings();
     }
   }, [isOpen]);
+
+  // Force toolsProvider to claude when cursor is disabled
+  useEffect(() => {
+    if (isCursorDisabled() && toolsProvider === 'cursor') {
+      setToolsProvider('claude');
+    }
+  }, [toolsProvider]);
 
   const loadSettings = async () => {
     try {
@@ -722,16 +730,18 @@ function ToolsSettings({ isOpen, onClose, projects = [] }) {
                 >
                   Claude Tools
                 </button>
-                <button
-                  onClick={() => setToolsProvider('cursor')}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                    toolsProvider === 'cursor'
-                      ? 'border-purple-600 text-purple-600 dark:text-purple-400'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  Cursor Tools
-                </button>
+                {!isCursorDisabled() && (
+                  <button
+                    onClick={() => setToolsProvider('cursor')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      toolsProvider === 'cursor'
+                        ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Cursor Tools
+                  </button>
+                )}
               </div>
             </div>
             

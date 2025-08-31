@@ -8,6 +8,7 @@ import { FolderOpen, Folder, Plus, MessageSquare, Clock, ChevronDown, ChevronRig
 import { cn } from '../lib/utils';
 import ClaudeLogo from './ClaudeLogo';
 import CursorLogo from './CursorLogo.jsx';
+import { isCursorDisabled } from '../utils/featureFlags.js';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -210,7 +211,7 @@ function Sidebar({
   const getAllSessions = (project) => {
     // Combine Claude and Cursor sessions; Sidebar will display icon per row
     const claudeSessions = [...(project.sessions || []), ...(additionalSessions[project.name] || [])].map(s => ({ ...s, __provider: 'claude' }));
-    const cursorSessions = (project.cursorSessions || []).map(s => ({ ...s, __provider: 'cursor' }));
+    const cursorSessions = isCursorDisabled() ? [] : (project.cursorSessions || []).map(s => ({ ...s, __provider: 'cursor' }));
     // Sort by most recent activity/date
     const normalizeDate = (s) => new Date(s.__provider === 'cursor' ? s.createdAt : s.lastActivity);
     return [...claudeSessions, ...cursorSessions].sort((a, b) => normalizeDate(b) - normalizeDate(a));

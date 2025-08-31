@@ -22,6 +22,7 @@ import { useDropzone } from 'react-dropzone';
 import TodoList from './TodoList';
 import ClaudeLogo from './ClaudeLogo.jsx';
 import CursorLogo from './CursorLogo.jsx';
+import { isCursorDisabled } from '../utils/featureFlags.js';
 
 import ClaudeStatus from './ClaudeStatus';
 import { MicButton } from './MicButton.jsx';
@@ -238,7 +239,7 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                 </div>
               ) : (
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 p-1">
-                  {(localStorage.getItem('selected-provider') || 'claude') === 'cursor' ? (
+                  {(localStorage.getItem('selected-provider') || 'claude') === 'cursor' && !isCursorDisabled() ? (
                     <CursorLogo className="w-full h-full" />
                   ) : (
                     <ClaudeLogo className="w-full h-full" />
@@ -246,7 +247,7 @@ const MessageComponent = memo(({ message, index, prevMessage, shouldShowTimestam
                 </div>
               )}
               <div className="text-sm font-medium text-gray-900 dark:text-white">
-                {message.type === 'error' ? 'Error' : message.type === 'tool' ? 'Tool' : ((localStorage.getItem('selected-provider') || 'claude') === 'cursor' ? 'Cursor' : 'Claude')}
+                {message.type === 'error' ? 'Error' : message.type === 'tool' ? 'Tool' : ((localStorage.getItem('selected-provider') || 'claude') === 'cursor' && !isCursorDisabled() ? 'Cursor' : 'Claude')}
               </div>
             </div>
           )}
@@ -1429,10 +1430,22 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   // When selecting a session from Sidebar, auto-switch provider to match session's origin
   useEffect(() => {
     if (selectedSession && selectedSession.__provider && selectedSession.__provider !== provider) {
+      // Don't switch to cursor if it's disabled
+      if (selectedSession.__provider === 'cursor' && isCursorDisabled()) {
+        return;
+      }
       setProvider(selectedSession.__provider);
       localStorage.setItem('selected-provider', selectedSession.__provider);
     }
   }, [selectedSession]);
+  
+  // Force provider to Claude when Cursor is disabled
+  useEffect(() => {
+    if (isCursorDisabled() && provider === 'cursor') {
+      setProvider('claude');
+      localStorage.setItem('selected-provider', 'claude');
+    }
+  }, [provider]);
   
   // Load Cursor default model from config
   useEffect(() => {
@@ -3264,7 +3277,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                   Select a provider to start a new conversation
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+                <div className={`flex ${isCursorDisabled() ? 'justify-center' : 'flex-col sm:flex-row'} gap-4 justify-center items-center mb-8`}>
                   {/* Claude Button */}
                   <button
                     onClick={() => {
@@ -3297,41 +3310,44 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                     )}
                   </button>
                   
-                  {/* Cursor Button */}
-                  <button
-                    onClick={() => {
-                      setProvider('cursor');
-                      localStorage.setItem('selected-provider', 'cursor');
-                      // Focus input after selection
-                      setTimeout(() => textareaRef.current?.focus(), 100);
-                    }}
-                    className={`group relative w-64 h-32 bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-xl ${
-                      provider === 'cursor' 
-                        ? 'border-purple-500 shadow-lg ring-2 ring-purple-500/20' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-purple-400'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center justify-center h-full gap-3">
-                      <CursorLogo className="w-10 h-10" />
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Cursor</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">AI Code Editor</p>
-                      </div>
-                    </div>
-                    {provider === 'cursor' && (
-                      <div className="absolute top-2 right-2">
-                        <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
+                  {/* Cursor Button - conditionally rendered */}
+                  {!isCursorDisabled() && (
+                    <button
+                      onClick={() => {
+                        setProvider('cursor');
+                        localStorage.setItem('selected-provider', 'cursor');
+                        // Focus input after selection
+                        setTimeout(() => textareaRef.current?.focus(), 100);
+                      }}
+                      className={`group relative w-64 h-32 bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-xl ${
+                        provider === 'cursor' 
+                          ? 'border-purple-500 shadow-lg ring-2 ring-purple-500/20' 
+                          : 'border-gray-200 dark:border-gray-700 hover:border-purple-400'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center justify-center h-full gap-3">
+                        <CursorLogo className="w-10 h-10" />
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">Cursor</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">AI Code Editor</p>
                         </div>
                       </div>
-                    )}
-                  </button>
+                      {provider === 'cursor' && (
+                        <div className="absolute top-2 right-2">
+                          <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  )}
                 </div>
                 
                 {/* Model Selection for Cursor - Always reserve space to prevent jumping */}
-                <div className={`mb-6 transition-opacity duration-200 ${provider === 'cursor' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                {!isCursorDisabled() && (
+                  <div className={`mb-6 transition-opacity duration-200 ${provider === 'cursor' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {provider === 'cursor' ? 'Select Model' : '\u00A0'}
                   </label>
@@ -3350,12 +3366,15 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                     <option value="opus-4.1">Opus 4.1</option>
                   </select>
                 </div>
+                )}
                 
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {provider === 'claude' 
                     ? 'Ready to use Claude AI. Start typing your message below.'
-                    : provider === 'cursor'
+                    : provider === 'cursor' && !isCursorDisabled()
                     ? `Ready to use Cursor with ${cursorModel}. Start typing your message below.`
+                    : isCursorDisabled() && provider === 'claude'
+                    ? 'Ready to use Claude AI. Start typing your message below.'
                     : 'Select a provider above to begin'
                   }
                 </p>
@@ -3442,13 +3461,13 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
               {showAvatars && (
                 <div className="flex items-center space-x-3 mb-2">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 p-1 bg-transparent">
-                    {(localStorage.getItem('selected-provider') || 'claude') === 'cursor' ? (
+                    {(localStorage.getItem('selected-provider') || 'claude') === 'cursor' && !isCursorDisabled() ? (
                       <CursorLogo className="w-full h-full" />
                     ) : (
                       <ClaudeLogo className="w-full h-full" />
                     )}
                   </div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{(localStorage.getItem('selected-provider') || 'claude') === 'cursor' ? 'Cursor' : 'Claude'}</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">{(localStorage.getItem('selected-provider') || 'claude') === 'cursor' && !isCursorDisabled() ? 'Cursor' : 'Claude'}</div>
                   {/* Abort button removed - functionality not yet implemented at backend */}
                 </div>
               )}
