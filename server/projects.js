@@ -617,8 +617,31 @@ async function getSessionMessages(projectName, sessionId, limit = null, offset =
       }
     }
     
+    // Filter out messages with configured prefixes and meta messages (user messages only)
+    const filteredMessages = messages.filter(entry => {
+      // Filter out user meta messages (same logic as session summary generation)
+      if (entry.message?.role === 'user' && entry.message?.content && !entry.isMeta) {
+        let content = entry.message.content;
+        
+        // Handle array content format (extract text from first text object)
+        if (Array.isArray(content) && content.length > 0 && content[0].type === 'text') {
+          content = content[0].text;
+        }
+        
+        // Filter out messages that start with configured prefixes
+        if (typeof content === 'string' && shouldFilterContent(content)) {
+          return false;
+        }
+      } else if (entry.message?.role === 'user' && entry.isMeta) {
+        // Filter out all user meta messages
+        return false;
+      }
+      
+      return true;
+    });
+    
     // Sort messages by timestamp
-    const sortedMessages = messages.sort((a, b) => 
+    const sortedMessages = filteredMessages.sort((a, b) => 
       new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
     );
     
