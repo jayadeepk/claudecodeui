@@ -121,21 +121,10 @@ function MainContent({
             </button>
             
             {/* Action Buttons */}
-            {isMobile && (
-              <div className="flex-shrink-0 flex items-center gap-2">
-                {/* Task Progress Toggle - Only show in chat tab */}
-                {activeTab === 'chat' && todos && todos.length > 0 && (
-                  <TaskProgressButton 
-                    isOpen={todoPanelOpen}
-                    onToggle={onTodoPanelToggle}
-                    hasActiveTodos={todos.some(t => t.status === 'in_progress')}
-                  />
-                )}
-                
-                {/* Quick Settings Toggle - Show in all tabs */}
-                <QuickSettingsButton onClick={onQuickSettingsToggle} />
-              </div>
-            )}
+            <div className="flex-shrink-0 flex items-center gap-2">
+              {/* Quick Settings Toggle - Show in all tabs */}
+              <QuickSettingsButton onClick={onQuickSettingsToggle} />
+            </div>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center">
