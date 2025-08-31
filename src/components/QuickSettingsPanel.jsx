@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
   Maximize2, 
   Eye, 
   Settings2,
@@ -63,27 +61,6 @@ const QuickSettingsPanel = ({
 
   return (
     <>
-      {/* Pull Tab - Desktop only */}
-      {!isMobile && (
-        <div
-          className={`fixed top-1/2 -translate-y-1/2 ${
-            localIsOpen ? 'right-64' : 'right-0'
-          } z-50 transition-all duration-150 ease-out`}
-        >
-          <button
-            onClick={handleToggle}
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-l-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shadow-lg"
-            aria-label={localIsOpen ? 'Close settings panel' : 'Open settings panel'}
-          >
-            {localIsOpen ? (
-              <ChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-            ) : (
-              <ChevronLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-            )}
-          </button>
-        </div>
-      )}
-
       {/* Panel */}
       <div
         className={`fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-xl transform transition-transform duration-150 ease-out z-40 ${
