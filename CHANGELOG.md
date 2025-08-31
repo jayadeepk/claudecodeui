@@ -8,26 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- VITE_DISABLE_CURSOR feature flag to hide Cursor CLI references
-- Auto-collapse behavior for project folders in sidebar
-
-### Changed
-- Improved project selection message layout
-- Improved UI when Cursor CLI is disabled - hide 'Choose Your AI Assistant' text
-
-### Fixed
-- Fixed duplicate Quick Settings buttons in responsive layout
-- Fixed QuickSettingsPanel visibility in all tabs
-- Fixed Shell component dark theme issue with dynamic theme switching
-- Fixed Quick Settings button visibility across all views
-- Cleaned up UI text and console logging
-- Prevented git operations on non-git directories
-- Removed redundant session hierarchy system
-- Implemented subset session filtering using parentUuid analysis
+- Initial changelog file
 
 ## [2025-08-31]
 
 ### Added
+- VITE_DISABLE_CURSOR feature flag to hide Cursor CLI references
+- Auto-collapse behavior for project folders in sidebar
 - Quick Settings button to desktop header
 - Hamburger menu to toggle desktop sidebar visibility
 - 'Use Browser Theme' checkbox to Quick Settings panel
@@ -40,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable BASE_PATH for WebSocket URL generation
 
 ### Changed
+- Improved project selection message layout
+- Improved UI when Cursor CLI is disabled - hide 'Choose Your AI Assistant' text
 - Session summary filters now configurable via environment variables
 - Refined session hierarchy tracking to filter out subset sessions
 - Improved session name filtering by removing Caveat prefix check and adding isMeta filter
@@ -49,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added configurable version checking with VITE_DISABLE_VERSION_CHECK environment variable
 
 ### Fixed
+- Fixed duplicate Quick Settings buttons in responsive layout
+- Fixed QuickSettingsPanel visibility in all tabs
+- Fixed Shell component dark theme issue with dynamic theme switching
+- Fixed Quick Settings button visibility across all views
+- Cleaned up UI text and console logging
+- Prevented git operations on non-git directories
+- Removed redundant session hierarchy system
+- Implemented subset session filtering using parentUuid analysis
 - Removed local-command-stdout filter from session message parsing
 - Removed old Quick Settings pull tab from desktop view
 
