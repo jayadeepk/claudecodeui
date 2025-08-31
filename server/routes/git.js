@@ -42,9 +42,27 @@ async function validateGitRepository(projectPath) {
     if (error.message.includes('Project directory is not a git repository')) {
       throw error;
     }
-    throw new Error('Not a git repository. This directory does not contain a .git folder. Initialize a git repository with "git init" to use source control features.');
+    throw new Error('Not a git repository. Initialize a git repository with "git init" to use source control features.');
   }
 }
+
+// Check if directory is a git repository (lightweight check)
+router.get('/check', async (req, res) => {
+  const { project } = req.query;
+  
+  if (!project) {
+    return res.status(400).json({ error: 'Project name is required' });
+  }
+
+  try {
+    const projectPath = await getActualProjectPath(project);
+    await validateGitRepository(projectPath);
+    res.json({ isGitRepository: true });
+  } catch (error) {
+    // Don't log this error since it's expected for non-git directories
+    res.json({ isGitRepository: false, error: error.message });
+  }
+});
 
 // Get git status for a project
 router.get('/status', async (req, res) => {

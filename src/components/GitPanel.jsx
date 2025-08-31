@@ -34,14 +34,39 @@ function GitPanel({ selectedProject, isMobile }) {
   const textareaRef = useRef(null);
   const dropdownRef = useRef(null);
 
+  // Check if current project is a git repository
+  const checkIsGitRepository = async () => {
+    if (!selectedProject) return false;
+    
+    try {
+      const response = await authenticatedFetch(`./api/git/check?project=${encodeURIComponent(selectedProject.name)}`);
+      const data = await response.json();
+      if (data.isGitRepository) {
+        return true;
+      } else {
+        // Set error message from check endpoint
+        setGitStatus({ error: data.error });
+        return false;
+      }
+    } catch (error) {
+      setGitStatus({ error: 'Failed to check git repository status' });
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (selectedProject) {
-      fetchGitStatus();
-      fetchBranches();
-      fetchRemoteStatus();
-      if (activeView === 'history') {
-        fetchRecentCommits();
-      }
+      // First check if it's a git repository before making any git calls
+      checkIsGitRepository().then(isGitRepo => {
+        if (isGitRepo) {
+          fetchGitStatus();
+          fetchBranches();
+          fetchRemoteStatus();
+          if (activeView === 'history') {
+            fetchRecentCommits();
+          }
+        }
+      });
     }
   }, [selectedProject, activeView]);
 
@@ -866,9 +891,13 @@ function GitPanel({ selectedProject, isMobile }) {
           
           <button
             onClick={() => {
-              fetchGitStatus();
-              fetchBranches();
-              fetchRemoteStatus();
+              checkIsGitRepository().then(isGitRepo => {
+                if (isGitRepo) {
+                  fetchGitStatus();
+                  fetchBranches();
+                  fetchRemoteStatus();
+                }
+              });
             }}
             disabled={isLoading}
             className={`hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${isMobile ? 'p-1' : 'p-1.5'}`}
