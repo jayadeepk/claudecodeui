@@ -106,41 +106,6 @@ async function loadProjectConfig() {
   }
 }
 
-// Load session hierarchy (tracks which sessions are resumed from others)
-async function loadSessionHierarchy() {
-  const hierarchyPath = path.join(process.env.HOME, '.claude', 'session-hierarchy.json');
-  try {
-    const hierarchyData = await fs.readFile(hierarchyPath, 'utf8');
-    return JSON.parse(hierarchyData);
-  } catch (error) {
-    // Return empty hierarchy if file doesn't exist
-    return {};
-  }
-}
-
-// Save session hierarchy
-async function saveSessionHierarchy(hierarchy) {
-  const claudeDir = path.join(process.env.HOME, '.claude');
-  const hierarchyPath = path.join(claudeDir, 'session-hierarchy.json');
-  
-  // Ensure the .claude directory exists
-  try {
-    await fs.mkdir(claudeDir, { recursive: true });
-  } catch (error) {
-    if (error.code !== 'EEXIST') {
-      throw error;
-    }
-  }
-  
-  await fs.writeFile(hierarchyPath, JSON.stringify(hierarchy, null, 2), 'utf8');
-}
-
-// Record a session resume relationship
-async function recordSessionResume(childSessionId, parentSessionId) {
-  const hierarchy = await loadSessionHierarchy();
-  hierarchy[childSessionId] = { parentSessionId, resumedAt: new Date().toISOString() };
-  await saveSessionHierarchy(hierarchy);
-}
 
 // Save project configuration file
 async function saveProjectConfig(config) {
@@ -415,8 +380,6 @@ async function getSessions(projectName, limit = 5, offset = 0) {
       return { sessions: [], hasMore: false, total: 0 };
     }
     
-    // Load session hierarchy to filter out parent sessions
-    const hierarchy = await loadSessionHierarchy();
     
     // For performance, get file stats to sort by modification time
     const filesWithStats = await Promise.all(
@@ -529,10 +492,9 @@ async function getSessions(projectName, limit = 5, offset = 0) {
     
     console.log(`[DEBUG] Found ${sessionsToFilter.size} sessions to filter out:`, Array.from(sessionsToFilter).map(id => id.slice(0,8)));
     
-    // Filter out subset sessions and also check hierarchy file as fallback
-    const parentSessions = new Set(Object.values(hierarchy).map(h => h.parentSessionId));
+    // Filter out subset sessions
     const filteredSessions = Array.from(allSessions.values()).filter(session => 
-      !parentSessions.has(session.id) && !sessionsToFilter.has(session.id)
+      !sessionsToFilter.has(session.id)
     );
     
     // Convert to array and sort by last activity
@@ -1036,7 +998,4 @@ export {
   saveProjectConfig,
   extractProjectDirectory,
   clearProjectDirectoryCache,
-  loadSessionHierarchy,
-  saveSessionHierarchy,
-  recordSessionResume
 };
