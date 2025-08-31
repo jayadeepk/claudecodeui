@@ -14,7 +14,8 @@ import {
   FileText,
   Languages,
   Zap,
-  ListTodo
+  ListTodo,
+  Monitor
 } from 'lucide-react';
 import DarkModeToggle from './DarkModeToggle';
 import { useTheme } from '../contexts/ThemeContext';
@@ -40,7 +41,7 @@ const QuickSettingsPanel = ({
   const [whisperMode, setWhisperMode] = useState(() => {
     return localStorage.getItem('whisperMode') || 'default';
   });
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, useBrowserTheme, toggleBrowserTheme } = useTheme();
 
   useEffect(() => {
     setLocalIsOpen(isOpen);
@@ -111,6 +112,19 @@ const QuickSettingsPanel = ({
                 </span>
                 <DarkModeToggle />
               </div>
+
+              <label className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors border border-transparent hover:border-gray-300 dark:hover:border-gray-600">
+                <span className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
+                  <Monitor className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  Use Browser Theme
+                </span>
+                <input
+                  type="checkbox"
+                  checked={useBrowserTheme}
+                  onChange={toggleBrowserTheme}
+                  className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-800 dark:checked:bg-blue-600"
+                />
+              </label>
             </div>
 
             {/* Permission Mode Settings */}
