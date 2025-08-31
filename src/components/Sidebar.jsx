@@ -439,7 +439,7 @@ function Sidebar({
             </div>
             <div>
               <h1 className="text-lg font-bold text-foreground">Claude Code UI</h1>
-              <p className="text-sm text-muted-foreground">AI coding assistant interface</p>
+              <p className="text-sm text-muted-foreground">AI coding assistant</p>
             </div>
           </button>
           <div className="flex gap-2">
