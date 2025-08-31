@@ -177,6 +177,8 @@ function Sidebar({
     if (newExpanded.has(projectName)) {
       newExpanded.delete(projectName);
     } else {
+      // Auto-collapse all other projects when expanding this one
+      newExpanded.clear();
       newExpanded.add(projectName);
     }
     setExpandedProjects(newExpanded);
