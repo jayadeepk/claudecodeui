@@ -197,30 +197,24 @@ function MainContent({
             </div>
           </div>
           
-          {/* Mobile Action Buttons */}
-          {isMobile && (
-            <div className="flex-shrink-0 flex items-center gap-2">
-              {/* Task Progress Toggle - Only show in chat tab */}
-              {activeTab === 'chat' && todos && todos.length > 0 && (
-                <TaskProgressButton 
-                  isOpen={todoPanelOpen}
-                  onToggle={onTodoPanelToggle}
-                  hasActiveTodos={todos.some(t => t.status === 'in_progress')}
-                />
-              )}
-              
-              {/* Quick Settings Toggle - Show in all tabs */}
-              <QuickSettingsButton onClick={onQuickSettingsToggle} />
-            </div>
-          )}
-          
-          {/* Desktop Action Buttons and Tab Navigation */}
-          <div className="flex-shrink-0 hidden sm:flex items-center gap-3">
-            {/* Quick Settings Toggle - Desktop */}
+          {/* Action Buttons - Responsive */}
+          <div className="flex-shrink-0 flex items-center gap-2 sm:gap-3">
+            {/* Mobile: Task Progress Toggle - Only show in chat tab */}
+            {isMobile && activeTab === 'chat' && todos && todos.length > 0 && (
+              <TaskProgressButton 
+                isOpen={todoPanelOpen}
+                onToggle={onTodoPanelToggle}
+                hasActiveTodos={todos.some(t => t.status === 'in_progress')}
+              />
+            )}
+            
+            {/* Quick Settings Toggle - Show in all tabs and all screen sizes */}
             <QuickSettingsButton onClick={onQuickSettingsToggle} />
             
-            {/* Modern Tab Navigation */}
-            <div className="relative flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            {/* Desktop: Tab Navigation - Only show on larger screens */}
+            <div className="hidden sm:block">
+              {/* Modern Tab Navigation */}
+              <div className="relative flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
               <button
                 onClick={() => setActiveTab('chat')}
                 className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md ${
@@ -296,6 +290,7 @@ function MainContent({
                   <span className="hidden sm:inline">Preview</span>
                 </span>
               </button> */}
+              </div>
             </div>
           </div>
         </div>
