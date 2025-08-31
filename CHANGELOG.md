@@ -8,7 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial changelog file
+- VITE_DISABLE_CURSOR feature flag to hide Cursor CLI references
+- Auto-collapse behavior for project folders in sidebar
+
+### Changed
+- Improved project selection message layout
+- Improved UI when Cursor CLI is disabled - hide 'Choose Your AI Assistant' text
+
+### Fixed
+- Fixed duplicate Quick Settings buttons in responsive layout
+- Fixed QuickSettingsPanel visibility in all tabs
+- Fixed Shell component dark theme issue with dynamic theme switching
+- Fixed Quick Settings button visibility across all views
+- Cleaned up UI text and console logging
+- Prevented git operations on non-git directories
+- Removed redundant session hierarchy system
+- Implemented subset session filtering using parentUuid analysis
 
 ## [2025-08-31]
 
