@@ -2053,10 +2053,8 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
         // Manually set loading state to measure height change
         setIsLoadingMoreMessages(true);
         
-        // Wait for loading indicator to render and measure its height impact
-        setTimeout(async () => {
-          const heightWithLoadingIndicator = scrollContainerRef.current?.scrollHeight || previousScrollHeight;
-          const loadingIndicatorHeight = heightWithLoadingIndicator - previousScrollHeight;
+        // Use requestAnimationFrame for smoother updates since loading indicator no longer affects layout
+        requestAnimationFrame(async () => {
           
           try {
             // Load more messages (skip the internal setIsLoadingMoreMessages call since we already set it)
@@ -2081,19 +2079,19 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
               // Prepend new messages to the existing ones
               setSessionMessages(prev => [...moreMessages, ...prev]);
               
-              // Restore scroll position after DOM update, accounting for loading indicator height
-              setTimeout(() => {
+              // Restore scroll position immediately after DOM update since loading indicator doesn't affect layout
+              requestAnimationFrame(() => {
                 if (scrollContainerRef.current) {
                   const newScrollHeight = scrollContainerRef.current.scrollHeight;
-                  const scrollDiff = newScrollHeight - previousScrollHeight - loadingIndicatorHeight;
+                  const scrollDiff = newScrollHeight - previousScrollHeight;
                   scrollContainerRef.current.scrollTop = previousScrollTop + scrollDiff;
                 }
-              }, 0);
+              });
             }
           } finally {
             setIsLoadingMoreMessages(false);
           }
-        }, 0);
+        });
       }
     }
   }, [isNearBottom, hasMoreMessages, isLoadingMoreMessages, selectedSession, selectedProject, loadSessionMessages, messagesOffset, MESSAGES_PER_PAGE]);
@@ -3433,7 +3431,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           <>
             {/* Loading indicator for older messages */}
             {isLoadingMoreMessages && (
-              <div className="text-center text-gray-500 dark:text-gray-400 py-3">
+              <div className="loading-more-messages text-center text-gray-500 dark:text-gray-400">
                 <div className="flex items-center justify-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
                   <p className="text-sm">Loading older messages...</p>
