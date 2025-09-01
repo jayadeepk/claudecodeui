@@ -2046,57 +2046,29 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
       const provider = localStorage.getItem('selected-provider') || 'claude';
       
       if (scrolledNearTop && hasMoreMessages && !isLoadingMoreMessages && selectedSession && selectedProject && provider !== 'cursor') {
-        // Save current scroll position before loading indicator appears
+        // Save current scroll position
         const previousScrollHeight = container.scrollHeight;
         const previousScrollTop = container.scrollTop;
         
-        // Manually set loading state to measure height change
-        setIsLoadingMoreMessages(true);
+        // Load more messages
+        const moreMessages = await loadSessionMessages(selectedProject.name, selectedSession.id, true);
         
-        // Wait for loading indicator to render and measure its height impact
-        setTimeout(async () => {
-          const heightWithLoadingIndicator = scrollContainerRef.current?.scrollHeight || previousScrollHeight;
-          const loadingIndicatorHeight = heightWithLoadingIndicator - previousScrollHeight;
+        if (moreMessages.length > 0) {
+          // Prepend new messages to the existing ones
+          setSessionMessages(prev => [...moreMessages, ...prev]);
           
-          try {
-            // Load more messages (skip the internal setIsLoadingMoreMessages call since we already set it)
-            const currentOffset = messagesOffset;
-            const response = await api.sessionMessages(selectedProject.name, selectedSession.id, MESSAGES_PER_PAGE, currentOffset);
-            if (!response.ok) {
-              throw new Error('Failed to load session messages');
+          // Restore scroll position after DOM update
+          setTimeout(() => {
+            if (scrollContainerRef.current) {
+              const newScrollHeight = scrollContainerRef.current.scrollHeight;
+              const scrollDiff = newScrollHeight - previousScrollHeight;
+              scrollContainerRef.current.scrollTop = previousScrollTop + scrollDiff;
             }
-            const data = await response.json();
-            
-            let moreMessages = [];
-            if (data.hasMore !== undefined) {
-              setHasMoreMessages(data.hasMore);
-              setTotalMessages(data.total);
-              setMessagesOffset(currentOffset + (data.messages?.length || 0));
-              moreMessages = data.messages || [];
-            } else {
-              moreMessages = data;
-            }
-            
-            if (moreMessages.length > 0) {
-              // Prepend new messages to the existing ones
-              setSessionMessages(prev => [...moreMessages, ...prev]);
-              
-              // Restore scroll position after DOM update, accounting for loading indicator height
-              setTimeout(() => {
-                if (scrollContainerRef.current) {
-                  const newScrollHeight = scrollContainerRef.current.scrollHeight;
-                  const scrollDiff = newScrollHeight - previousScrollHeight - loadingIndicatorHeight;
-                  scrollContainerRef.current.scrollTop = previousScrollTop + scrollDiff;
-                }
-              }, 0);
-            }
-          } finally {
-            setIsLoadingMoreMessages(false);
-          }
-        }, 0);
+          }, 0);
+        }
       }
     }
-  }, [isNearBottom, hasMoreMessages, isLoadingMoreMessages, selectedSession, selectedProject, loadSessionMessages, messagesOffset, MESSAGES_PER_PAGE]);
+  }, [isNearBottom, hasMoreMessages, isLoadingMoreMessages, selectedSession, selectedProject, loadSessionMessages]);
 
   useEffect(() => {
     // Load session messages when session changes
