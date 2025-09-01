@@ -1413,6 +1413,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   const [canAbortSession, setCanAbortSession] = useState(false);
   const [isUserScrolledUp, setIsUserScrolledUp] = useState(false);
   const scrollPositionRef = useRef({ height: 0, top: 0 });
+  const isRestoringScrollRef = useRef(false);
   const [showCommandMenu, setShowCommandMenu] = useState(false);
   const [slashCommands, setSlashCommands] = useState([]);
   const [filteredCommands, setFilteredCommands] = useState([]);
@@ -2018,6 +2019,11 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     return convertSessionMessages(sessionMessages);
   }, [sessionMessages]);
 
+  // Generate unique message ID from message properties
+  const getMessageId = useCallback((message) => {
+    return message.rowid || message.sequence || `${message.timestamp}-${message.type}`;
+  }, []);
+
   // Define scroll functions early to avoid hoisting issues in useEffect dependencies
   const scrollToBottom = useCallback(() => {
     if (scrollContainerRef.current) {
@@ -2045,10 +2051,16 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
       const scrolledNearTop = container.scrollTop < 100;
       const provider = localStorage.getItem('selected-provider') || 'claude';
       
-      if (scrolledNearTop && hasMoreMessages && !isLoadingMoreMessages && selectedSession && selectedProject && provider !== 'cursor') {
-        // Save current scroll position
-        const previousScrollHeight = container.scrollHeight;
-        const previousScrollTop = container.scrollTop;
+      if (scrolledNearTop && hasMoreMessages && !isLoadingMoreMessages && !isRestoringScrollRef.current && selectedSession && selectedProject && provider !== 'cursor') {
+        // Find the top visible message to use as anchor
+        const currentVisibleMessages = chatMessages.length <= visibleMessageCount ? chatMessages : chatMessages.slice(-visibleMessageCount);
+        const topVisibleMessage = currentVisibleMessages.find(msg => {
+          const element = document.querySelector(`[data-message-id="${getMessageId(msg)}"]`);
+          if (!element) return false;
+          const rect = element.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          return rect.top >= containerRect.top;
+        });
         
         // Load more messages
         const moreMessages = await loadSessionMessages(selectedProject.name, selectedSession.id, true);
@@ -2057,18 +2069,24 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           // Prepend new messages to the existing ones
           setSessionMessages(prev => [...moreMessages, ...prev]);
           
-          // Restore scroll position after DOM update
+          // Set flag to prevent re-triggering during scroll restoration
+          isRestoringScrollRef.current = true;
+          
+          // Scroll to anchor message after DOM update
           setTimeout(() => {
-            if (scrollContainerRef.current) {
-              const newScrollHeight = scrollContainerRef.current.scrollHeight;
-              const scrollDiff = newScrollHeight - previousScrollHeight;
-              scrollContainerRef.current.scrollTop = previousScrollTop + scrollDiff;
+            if (topVisibleMessage && scrollContainerRef.current) {
+              const anchorElement = document.querySelector(`[data-message-id="${getMessageId(topVisibleMessage)}"]`);
+              if (anchorElement) {
+                anchorElement.scrollIntoView({ block: 'start' });
+              }
             }
+            // Clear the flag after scroll restoration is complete
+            isRestoringScrollRef.current = false;
           }, 0);
         }
       }
     }
-  }, [isNearBottom, hasMoreMessages, isLoadingMoreMessages, selectedSession, selectedProject, loadSessionMessages]);
+  }, [isNearBottom, hasMoreMessages, isLoadingMoreMessages, selectedSession, selectedProject, loadSessionMessages, getMessageId, chatMessages, visibleMessageCount]);
 
   useEffect(() => {
     // Load session messages when session changes
@@ -3448,10 +3466,13 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
               const shouldShowTimestamp = message.type === 'assistant' && !hasSubsequentNonToolAssistantMessage;
               
               return (
-                <MessageComponent
-                  key={index}
-                  message={message}
-                  index={index}
+                <div
+                  key={getMessageId(message)}
+                  data-message-id={getMessageId(message)}
+                >
+                  <MessageComponent
+                    message={message}
+                    index={index}
                   prevMessage={prevMessage}
                   shouldShowTimestamp={shouldShowTimestamp}
                   createDiff={createDiff}
@@ -3461,7 +3482,8 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                   showRawParameters={showRawParameters}
                   showAvatars={showAvatars}
                   todoPanelOpen={todoPanelOpen}
-                />
+                  />
+                </div>
               );
             })}
           </>
