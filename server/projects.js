@@ -410,8 +410,10 @@ async function getSessions(projectName, limit = 5, offset = 0) {
       
       processedCount++;
       
-      // Early exit optimization: if we have enough sessions and processed recent files
-      if (allSessions.size >= (limit + offset) * 2 && processedCount >= Math.min(3, filesWithStats.length)) {
+      // Continue processing until we have processed all files or have significantly more sessions
+      // than needed to account for duplicate filtering
+      const targetSessions = Math.max((limit + offset) * 3, 50); // Ensure we have enough for filtering
+      if (allSessions.size >= targetSessions && processedCount >= Math.min(5, filesWithStats.length)) {
         break;
       }
     }
@@ -503,7 +505,67 @@ async function getSessions(projectName, limit = 5, offset = 0) {
     );
     
     const total = sortedSessions.length;
-    const paginatedSessions = sortedSessions.slice(offset, offset + limit);
+    let paginatedSessions = sortedSessions.slice(offset, offset + limit);
+    
+    // If we don't have enough sessions and there are more files to process, 
+    // try processing remaining files to get more unique sessions
+    if (paginatedSessions.length < limit && processedCount < filesWithStats.length && offset === 0) {
+      console.log(`[DEBUG] Only found ${paginatedSessions.length}/${limit} sessions after filtering. Processing remaining files...`);
+      
+      // Process remaining files
+      for (let i = processedCount; i < filesWithStats.length; i++) {
+        const { file } = filesWithStats[i];
+        const jsonlFile = path.join(projectDir, file);
+        const sessions = await parseJsonlSessions(jsonlFile);
+        
+        // Add new unique sessions
+        const newSessions = [];
+        sessions.forEach(session => {
+          if (!allSessions.has(session.id)) {
+            allSessions.set(session.id, session);
+            newSessions.push(session);
+          }
+        });
+        
+        // Re-filter and re-sort if we added new sessions
+        if (newSessions.length > 0) {
+          // Quick subset check for new sessions against existing ones
+          const allSessionsArray = Array.from(allSessions.values());
+          const sessionsToFilterUpdated = new Set(sessionsToFilter);
+          
+          // Only check new sessions against existing ones for efficiency
+          for (const newSession of newSessions) {
+            for (const existingSession of allSessionsArray) {
+              if (existingSession.id === newSession.id) continue;
+              
+              // Simple subset check (could be enhanced with full message analysis)
+              if (newSession.messageCount < existingSession.messageCount && 
+                  Math.abs(new Date(newSession.lastActivity) - new Date(existingSession.lastActivity)) < 60000) {
+                sessionsToFilterUpdated.add(newSession.id);
+                break;
+              }
+            }
+          }
+          
+          // Re-filter and re-sort
+          const updatedFilteredSessions = Array.from(allSessions.values()).filter(session => 
+            !sessionsToFilterUpdated.has(session.id)
+          );
+          
+          const updatedSortedSessions = updatedFilteredSessions.sort((a, b) => 
+            new Date(b.lastActivity) - new Date(a.lastActivity)
+          );
+          
+          paginatedSessions = updatedSortedSessions.slice(offset, offset + limit);
+          
+          // If we have enough now, stop processing
+          if (paginatedSessions.length >= limit) {
+            break;
+          }
+        }
+      }
+    }
+    
     const hasMore = offset + limit < total;
     
     return {
