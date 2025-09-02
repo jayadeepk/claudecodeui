@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial changelog file
 
+## [2025-09-02]
+
+### Added
+- Claude Code project command for automated changelog generation
+
+### Fixed
+- Disabled overscroll behavior in chat interface
+- Ensured session pagination always returns requested count after duplicate filtering
+
 ## [2025-08-31]
 
 ### Added
