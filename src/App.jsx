@@ -816,7 +816,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <ProtectedRoute>
-          <Router basename="/claude">
+          <Router basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
             <Routes>
               <Route path="/" element={<AppContent />} />
               <Route path="/session/:sessionId" element={<AppContent />} />

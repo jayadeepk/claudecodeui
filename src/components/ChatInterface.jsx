@@ -2203,7 +2203,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           // Record the parent-child relationship for filtering
           if (latestMessage.sessionId && latestMessage.parentSessionId) {
             // Record this relationship on the backend
-            fetch('/api/projects/record-session-resume', {
+            fetch('./api/projects/record-session-resume', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
