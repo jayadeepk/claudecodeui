@@ -28,6 +28,36 @@ import ClaudeStatus from './ClaudeStatus';
 import { MicButton } from './MicButton.jsx';
 import { api, authenticatedFetch } from '../utils/api';
 
+// Utility function to trigger device vibration
+const triggerVibration = () => {
+  console.log('🔔 triggerVibration called');
+  console.log('HTTPS context:', window.location.protocol === 'https:');
+  console.log('Navigator.vibrate available:', !!navigator.vibrate);
+  console.log('Navigator.vibrate type:', typeof navigator.vibrate);
+  console.log('Document has focus:', document.hasFocus());
+  
+  // Check for secure context
+  if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+    console.log('❌ Vibration requires HTTPS or localhost');
+    return false;
+  }
+  
+  if (navigator.vibrate && typeof navigator.vibrate === 'function') {
+    try {
+      console.log('📳 Attempting to vibrate...');
+      const result = navigator.vibrate(200);
+      console.log('Vibration result:', result);
+      return result;
+    } catch (error) {
+      console.error('Vibration error:', error);
+      return false;
+    }
+  } else {
+    console.log('❌ Vibration API not available');
+    return false;
+  }
+};
+
 
 // Format "Claude AI usage limit reached|<epoch>" into a local time string
 function formatUsageLimitText(text) {
@@ -1365,7 +1395,7 @@ const ImageAttachment = ({ file, onRemove, uploadProgress, error }) => {
 // - onReplaceTemporarySession: Called to replace temporary session ID with real WebSocket session ID
 //
 // This ensures uninterrupted chat experience by pausing sidebar refreshes during conversations.
-function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, messages, onFileOpen, onInputFocusChange, onSessionActive, onSessionInactive, onReplaceTemporarySession, onNavigateToSession, onShowSettings, onClearTodos, onTodoUpdate, autoExpandTools, showRawParameters, autoScrollToBottom, sendByCtrlEnter, permissionMode: externalPermissionMode, onPermissionModeChange, todoPanelOpen }) {
+function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, messages, onFileOpen, onInputFocusChange, onSessionActive, onSessionInactive, onReplaceTemporarySession, onNavigateToSession, onShowSettings, onClearTodos, onTodoUpdate, autoExpandTools, showRawParameters, autoScrollToBottom, sendByCtrlEnter, permissionMode: externalPermissionMode, onPermissionModeChange, todoPanelOpen, vibrateOnComplete }) {
   const [input, setInput] = useState(() => {
     if (typeof window !== 'undefined' && selectedProject) {
       return safeLocalStorage.getItem(`draft_input_${selectedProject.name}`) || '';
@@ -2274,7 +2304,13 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
                 if (last && last.type === 'assistant' && last.isStreaming) {
+                  console.log('🎯 Chat completion detected (content_block_stop)');
+                  console.log('vibrateOnComplete setting:', vibrateOnComplete);
                   last.isStreaming = false;
+                  // Trigger vibration if enabled
+                  if (vibrateOnComplete) {
+                    triggerVibration();
+                  }
                 }
                 return updated;
               });
@@ -2522,12 +2558,25 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
               // Try to consolidate into the last streaming assistant message
               const last = updated[updated.length - 1];
               if (last && last.type === 'assistant' && !last.isToolUse && last.isStreaming) {
+                console.log('🎯 Chat completion detected (cursor-result streaming)');
+                console.log('vibrateOnComplete setting:', vibrateOnComplete);
                 // Replace streaming content with the final content so deltas don't remain
                 const finalContent = textResult && textResult.trim() ? textResult : (last.content || '') + (pendingChunk || '');
                 last.content = finalContent;
                 last.isStreaming = false;
+                // Trigger vibration if enabled
+                if (vibrateOnComplete) {
+                  triggerVibration();
+                }
               } else if (textResult && textResult.trim()) {
+                console.log('🎯 Chat completion detected (cursor-result new message)');
+                console.log('vibrateOnComplete setting:', vibrateOnComplete);
+                console.log('is_error:', r.is_error);
                 updated.push({ type: r.is_error ? 'error' : 'assistant', content: textResult, timestamp: new Date(), isStreaming: false });
+                // Trigger vibration if enabled (for new non-streaming messages)
+                if (vibrateOnComplete && !r.is_error) {
+                  triggerVibration();
+                }
               }
               return updated;
             });

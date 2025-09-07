@@ -53,7 +53,8 @@ function MainContent({
   todoPanelOpen,          // Whether the Task Progress sidebar is open
   onQuickSettingsToggle,  // Toggle quick settings panel
   onTodoPanelToggle,      // Toggle todo panel
-  todos                   // Todo items for showing badge count
+  todos,                  // Todo items for showing badge count
+  vibrateOnComplete       // Whether to vibrate when chat is complete
 }) {
   const [editingFile, setEditingFile] = useState(null);
 
@@ -322,6 +323,7 @@ function MainContent({
               permissionMode={permissionMode}
               onPermissionModeChange={onPermissionModeChange}
               todoPanelOpen={todoPanelOpen}
+              vibrateOnComplete={vibrateOnComplete}
             />
           </ErrorBoundary>
         </div>

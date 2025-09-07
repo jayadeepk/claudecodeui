@@ -75,6 +75,10 @@ function AppContent() {
     const saved = localStorage.getItem('sendByCtrlEnter');
     return saved !== null ? JSON.parse(saved) : false;
   });
+  const [vibrateOnComplete, setVibrateOnComplete] = useState(() => {
+    const saved = localStorage.getItem('vibrateOnComplete');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
   const [permissionMode, setPermissionMode] = useState('default');
   // Todo panel state
   const [todos, setTodos] = useState([]);
@@ -725,6 +729,7 @@ function AppContent() {
           onQuickSettingsToggle={setShowQuickSettings}
           onTodoPanelToggle={setTodoPanelOpen}
           todos={todos}
+          vibrateOnComplete={vibrateOnComplete}
         />
       </div>
 
@@ -792,6 +797,11 @@ function AppContent() {
           onTodoPanelChange={(value) => {
             setTodoPanelOpen(value);
             localStorage.setItem('todoPanelOpen', JSON.stringify(value));
+          }}
+          vibrateOnComplete={vibrateOnComplete}
+          onVibrateOnCompleteChange={(value) => {
+            setVibrateOnComplete(value);
+            localStorage.setItem('vibrateOnComplete', JSON.stringify(value));
           }}
           isMobile={isMobile}
         />
