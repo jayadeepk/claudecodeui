@@ -3081,11 +3081,10 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     setImageErrors(new Map());
     setIsTextareaExpanded(false);
     
-    // Reset textarea height
-
-
+    // Reset textarea height and blur to show mobile tabs
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
+      textareaRef.current.blur();
     }
     
     // Clear the saved draft since message was sent
