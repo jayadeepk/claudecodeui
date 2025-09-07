@@ -61,7 +61,7 @@ function AppContent() {
   const [showQuickSettings, setShowQuickSettings] = useState(false);
   const [autoExpandTools, setAutoExpandTools] = useState(() => {
     const saved = localStorage.getItem('autoExpandTools');
-    return saved !== null ? JSON.parse(saved) : false;
+    return saved !== null ? JSON.parse(saved) : true;
   });
   const [showRawParameters, setShowRawParameters] = useState(() => {
     const saved = localStorage.getItem('showRawParameters');
