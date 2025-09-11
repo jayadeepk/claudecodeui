@@ -41,6 +41,8 @@ export const sendNotification = (title = 'Claude Code', body = 'Task completed',
   // Use smart body generation if content is provided
   const notificationBody = content ? createNotificationBody(content) : body;
   console.log('🔔 sendNotification called');
+  console.log('📋 Notification params:', { title, body, content });
+  console.log('📋 Final notification body:', notificationBody);
   console.log('HTTPS context:', window.location.protocol === 'https:');
   console.log('Notification available:', 'Notification' in window);
   console.log('Notification permission:', Notification?.permission);

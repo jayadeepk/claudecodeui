@@ -220,7 +220,36 @@ function AppContent() {
         
         // Send notification if enabled (ChatInterface already handles todo-specific notifications)
         if (notifyOnComplete) {
-          sendNotification();
+          // Get content from last meaningful todo
+          const getLastTodoContent = () => {
+            if (!todos || !Array.isArray(todos) || todos.length === 0) {
+              return null;
+            }
+            
+            const meaningfulTodos = todos.filter(todo => 
+              todo.content && 
+              todo.content.trim() && 
+              (todo.status === 'completed' || todo.status === 'in_progress')
+            );
+            
+            if (meaningfulTodos.length === 0) {
+              return null;
+            }
+            
+            const lastTodo = meaningfulTodos[meaningfulTodos.length - 1];
+            
+            // Use activeForm for in-progress todos, content for completed todos
+            if (lastTodo.status === 'in_progress' && lastTodo.activeForm) {
+              return lastTodo.activeForm;
+            }
+            
+            return lastTodo.content;
+          };
+          
+          const todoContent = getLastTodoContent();
+          console.log('📋 App.jsx notification - todoContent:', todoContent);
+          const notificationContent = todoContent ? `✅ ${todoContent}` : null;
+          sendNotification('Claude Code', 'Task completed', notificationContent);
         }
       } else if (latestMessage.type === 'session-aborted') {
         // Clear todos when session is aborted since work was interrupted
