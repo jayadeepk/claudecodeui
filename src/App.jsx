@@ -232,7 +232,8 @@ function AppContent() {
             if (completedTasks.length === 1) {
               sendNotification('Claude Code', `Completed: ${completedTasks[0].content}`);
             } else if (completedTasks.length > 1) {
-              sendNotification('Claude Code', `Completed ${completedTasks.length} tasks`);
+              const lastTask = completedTasks[completedTasks.length - 1];
+              sendNotification('Claude Code', `Completed: ${lastTask.content}`);
             } else {
               sendNotification('Claude Code', 'Task completed');
             }
