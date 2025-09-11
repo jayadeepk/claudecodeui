@@ -27,55 +27,8 @@ import { isCursorDisabled } from '../utils/featureFlags.js';
 import ClaudeStatus from './ClaudeStatus';
 import { MicButton } from './MicButton.jsx';
 import { api, authenticatedFetch } from '../utils/api';
+import { sendNotification } from '../utils/notifications';
 
-// Utility function to send desktop notification
-const sendNotification = () => {
-  console.log('🔔 sendNotification called');
-  console.log('HTTPS context:', window.location.protocol === 'https:');
-  console.log('Notification available:', 'Notification' in window);
-  console.log('Notification permission:', Notification.permission);
-  console.log('Document has focus:', document.hasFocus());
-  
-  // Check if notifications are supported
-  if (!('Notification' in window)) {
-    console.log('❌ Notifications not supported');
-    return false;
-  }
-  
-  // Check for secure context
-  if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-    console.log('❌ Notifications require HTTPS or localhost');
-    return false;
-  }
-  
-  // Only show notification if permission is granted
-  if (Notification.permission === 'granted') {
-    try {
-      console.log('📳 Sending notification...');
-      const notification = new Notification('Claude Code', {
-        body: 'Response completed',
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
-        tag: 'claude-response',
-        renotify: true
-      });
-      
-      // Auto-close after 3 seconds
-      setTimeout(() => {
-        notification.close();
-      }, 3000);
-      
-      console.log('Notification sent successfully');
-      return true;
-    } catch (error) {
-      console.error('Notification error:', error);
-      return false;
-    }
-  } else {
-    console.log('❌ Notification permission not granted');
-    return false;
-  }
-};
 
 
 // Format "Claude AI usage limit reached|<epoch>" into a local time string

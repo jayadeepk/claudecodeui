@@ -34,6 +34,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import { api, authenticatedFetch } from './utils/api';
+import { sendNotification } from './utils/notifications';
 
 
 // Main App component with routing
@@ -219,57 +220,7 @@ function AppContent() {
         
         // Send notification if enabled
         if (notifyOnComplete) {
-          console.log('🔔 sendNotification called from App.jsx');
-          console.log('HTTPS context:', window.location.protocol === 'https:');
-          console.log('Notification available:', 'Notification' in window);
-          console.log('Notification permission:', Notification?.permission);
-          console.log('Document has focus:', document.hasFocus());
-          console.log('PWA mode:', window.matchMedia('(display-mode: standalone)').matches);
-          
-          if ('Notification' in window && Notification.permission === 'granted') {
-            try {
-              console.log('📳 Sending notification...');
-              
-              // Check if we're in PWA mode and service worker is available
-              const isPWA = window.matchMedia('(display-mode: standalone)').matches;
-              
-              if (isPWA && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                // Use service worker for PWA notifications (better Android compatibility)
-                console.log('📳 Using service worker for PWA notification');
-                navigator.serviceWorker.controller.postMessage({
-                  type: 'SHOW_NOTIFICATION',
-                  payload: {
-                    title: 'Claude Code',
-                    body: 'Response completed',
-                    icon: '/icon-192.png',
-                    badge: '/icon-192.png',
-                    tag: 'claude-response'
-                  }
-                });
-              } else {
-                // Use direct Notification API for browser mode
-                console.log('📳 Using direct Notification API for browser');
-                const notification = new Notification('Claude Code', {
-                  body: 'Response completed',
-                  icon: '/icon-192.png',
-                  badge: '/icon-192.png',
-                  tag: 'claude-response',
-                  renotify: true
-                });
-                
-                // Auto-close after 3 seconds
-                setTimeout(() => {
-                  notification.close();
-                }, 3000);
-              }
-              
-              console.log('Notification sent successfully');
-            } catch (error) {
-              console.error('Notification error:', error);
-            }
-          } else {
-            console.log('❌ Notification permission not granted or API not available');
-          }
+          sendNotification();
         }
         
         if (todos.length > 0) {
