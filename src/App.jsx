@@ -214,35 +214,13 @@ function AppContent() {
           }
         }
       } else if (latestMessage.type === 'claude-complete') {
-        // When Claude completes, mark any in_progress todos as completed
-        // but keep the todos visible so user can see what was accomplished
-        console.log('📋 Claude session completed, updating todo status');
+        // ChatInterface handles todo updates via handleTodoUpdate callback
+        // Only handle notifications here to avoid duplicate state updates
+        console.log('📋 Claude session completed');
         
-        if (todos.length > 0) {
-          const updatedTodos = todos.map(todo => 
-            todo.status === 'in_progress' 
-              ? { ...todo, status: 'completed' }
-              : todo
-          );
-          setTodos(updatedTodos);
-          
-          // Send notification with completed task info if enabled
-          if (notifyOnComplete) {
-            const completedTasks = todos.filter(todo => todo.status === 'in_progress');
-            if (completedTasks.length === 1) {
-              sendNotification('Claude Code', `Completed: ${completedTasks[0].content}`);
-            } else if (completedTasks.length > 1) {
-              const lastTask = completedTasks[completedTasks.length - 1];
-              sendNotification('Claude Code', `Completed: ${lastTask.content}`);
-            } else {
-              sendNotification('Claude Code', 'Task completed');
-            }
-          }
-        } else {
-          // Send notification if enabled (no todos case)
-          if (notifyOnComplete) {
-            sendNotification();
-          }
+        // Send notification if enabled (ChatInterface already handles todo-specific notifications)
+        if (notifyOnComplete) {
+          sendNotification();
         }
       } else if (latestMessage.type === 'session-aborted') {
         // Clear todos when session is aborted since work was interrupted
