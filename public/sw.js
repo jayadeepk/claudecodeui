@@ -103,7 +103,7 @@ self.addEventListener('message', event => {
     const { title, body, icon, badge, tag } = event.data.payload;
     
     self.registration.showNotification(title || 'Claude Code', {
-      body: body || 'Response completed',
+      body: body || 'Task completed',
       icon: icon || '/icon-192.png',
       badge: badge || '/icon-192.png',
       tag: tag || 'claude-response',

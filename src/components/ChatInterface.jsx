@@ -2281,7 +2281,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                   last.isStreaming = false;
                   // Send notification if enabled
                   if (notifyOnComplete) {
-                    sendNotification();
+                    sendNotification('Claude Code', 'Task completed', last.content);
                   }
                 }
                 return updated;
@@ -2538,7 +2538,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                 last.isStreaming = false;
                 // Send notification if enabled
                 if (notifyOnComplete) {
-                  sendNotification();
+                  sendNotification('Claude Code', 'Task completed', finalContent);
                 }
               } else if (textResult && textResult.trim()) {
                 console.log('🎯 Chat completion detected (cursor-result new message)');
@@ -2547,7 +2547,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                 updated.push({ type: r.is_error ? 'error' : 'assistant', content: textResult, timestamp: new Date(), isStreaming: false });
                 // Send notification if enabled (for new non-streaming messages)
                 if (notifyOnComplete && !r.is_error) {
-                  sendNotification();
+                  sendNotification('Claude Code', 'Task completed', textResult);
                 }
               }
               return updated;

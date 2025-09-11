@@ -1,5 +1,45 @@
+// Create smart notification body based on message content
+const createNotificationBody = (content) => {
+  if (!content || !content.trim()) {
+    return 'Task completed';
+  }
+
+  // Clean up the content and get first meaningful line
+  const cleanContent = content
+    .replace(/^\s*```[\s\S]*?```\s*/gm, '[Code block] ') // Replace code blocks with placeholder
+    .replace(/^\s*<function_calls>[\s\S]*?<\/antml:function_calls>\s*/gm, '[Tool use] ') // Replace tool calls
+    .replace(/^\s*-\s+/gm, '') // Remove bullet points
+    .replace(/^\s*\d+\.\s+/gm, '') // Remove numbered lists
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold formatting
+    .replace(/\*(.*?)\*/g, '$1') // Remove italic formatting
+    .replace(/`(.*?)`/g, '$1') // Remove inline code formatting
+    .replace(/\n+/g, ' ') // Replace multiple newlines with spaces
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+
+  // Get first sentence or up to 80 characters
+  let summary = cleanContent;
+  
+  // Try to find first sentence
+  const sentenceMatch = cleanContent.match(/^[^.!?]*[.!?]/);
+  if (sentenceMatch) {
+    summary = sentenceMatch[0].trim();
+  }
+  
+  // If still too long, truncate at word boundary
+  if (summary.length > 80) {
+    const truncated = summary.substring(0, 77);
+    const lastSpace = truncated.lastIndexOf(' ');
+    summary = (lastSpace > 40 ? truncated.substring(0, lastSpace) : truncated) + '...';
+  }
+  
+  return summary || 'Task completed';
+};
+
 // Centralized notification utility
-export const sendNotification = (title = 'Claude Code', body = 'Response completed') => {
+export const sendNotification = (title = 'Claude Code', body = 'Task completed', content = null) => {
+  // Use smart body generation if content is provided
+  const notificationBody = content ? createNotificationBody(content) : body;
   console.log('🔔 sendNotification called');
   console.log('HTTPS context:', window.location.protocol === 'https:');
   console.log('Notification available:', 'Notification' in window);
@@ -31,7 +71,7 @@ export const sendNotification = (title = 'Claude Code', body = 'Response complet
         type: 'SHOW_NOTIFICATION',
         payload: {
           title,
-          body,
+          body: notificationBody,
           icon: '/icon-192.png',
           badge: '/icon-192.png',
           tag: 'claude-response'
@@ -41,7 +81,7 @@ export const sendNotification = (title = 'Claude Code', body = 'Response complet
       // Use direct Notification API for browser mode
       console.log('📳 Using direct Notification API for browser');
       const notification = new Notification(title, {
-        body,
+        body: notificationBody,
         icon: '/icon-192.png',
         badge: '/icon-192.png',
         tag: 'claude-response',

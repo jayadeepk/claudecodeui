@@ -218,11 +218,6 @@ function AppContent() {
         // but keep the todos visible so user can see what was accomplished
         console.log('📋 Claude session completed, updating todo status');
         
-        // Send notification if enabled
-        if (notifyOnComplete) {
-          sendNotification();
-        }
-        
         if (todos.length > 0) {
           const updatedTodos = todos.map(todo => 
             todo.status === 'in_progress' 
@@ -230,6 +225,23 @@ function AppContent() {
               : todo
           );
           setTodos(updatedTodos);
+          
+          // Send notification with completed task info if enabled
+          if (notifyOnComplete) {
+            const completedTasks = todos.filter(todo => todo.status === 'in_progress');
+            if (completedTasks.length === 1) {
+              sendNotification('Claude Code', `Completed: ${completedTasks[0].content}`);
+            } else if (completedTasks.length > 1) {
+              sendNotification('Claude Code', `Completed ${completedTasks.length} tasks`);
+            } else {
+              sendNotification('Claude Code', 'Task completed');
+            }
+          }
+        } else {
+          // Send notification if enabled (no todos case)
+          if (notifyOnComplete) {
+            sendNotification();
+          }
         }
       } else if (latestMessage.type === 'session-aborted') {
         // Clear todos when session is aborted since work was interrupted
