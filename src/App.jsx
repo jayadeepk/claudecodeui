@@ -250,7 +250,7 @@ function AppContent() {
         setTodos([]);
       }
     }
-  }, [messages, selectedProject, selectedSession, activeSessions, todos]);
+  }, [messages, selectedProject, selectedSession, activeSessions]);
 
   const fetchProjects = async () => {
     try {
