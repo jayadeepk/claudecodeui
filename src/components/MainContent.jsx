@@ -54,7 +54,7 @@ function MainContent({
   onQuickSettingsToggle,  // Toggle quick settings panel
   onTodoPanelToggle,      // Toggle todo panel
   todos,                  // Todo items for showing badge count
-  vibrateOnComplete       // Whether to vibrate when chat is complete
+  notifyOnComplete        // Whether to send notification when chat is complete
 }) {
   const [editingFile, setEditingFile] = useState(null);
 
@@ -323,7 +323,7 @@ function MainContent({
               permissionMode={permissionMode}
               onPermissionModeChange={onPermissionModeChange}
               todoPanelOpen={todoPanelOpen}
-              vibrateOnComplete={vibrateOnComplete}
+              notifyOnComplete={notifyOnComplete}
             />
           </ErrorBoundary>
         </div>

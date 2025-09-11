@@ -28,32 +28,51 @@ import ClaudeStatus from './ClaudeStatus';
 import { MicButton } from './MicButton.jsx';
 import { api, authenticatedFetch } from '../utils/api';
 
-// Utility function to trigger device vibration
-const triggerVibration = () => {
-  console.log('🔔 triggerVibration called');
+// Utility function to send desktop notification
+const sendNotification = () => {
+  console.log('🔔 sendNotification called');
   console.log('HTTPS context:', window.location.protocol === 'https:');
-  console.log('Navigator.vibrate available:', !!navigator.vibrate);
-  console.log('Navigator.vibrate type:', typeof navigator.vibrate);
+  console.log('Notification available:', 'Notification' in window);
+  console.log('Notification permission:', Notification.permission);
   console.log('Document has focus:', document.hasFocus());
   
-  // Check for secure context
-  if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-    console.log('❌ Vibration requires HTTPS or localhost');
+  // Check if notifications are supported
+  if (!('Notification' in window)) {
+    console.log('❌ Notifications not supported');
     return false;
   }
   
-  if (navigator.vibrate && typeof navigator.vibrate === 'function') {
+  // Check for secure context
+  if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+    console.log('❌ Notifications require HTTPS or localhost');
+    return false;
+  }
+  
+  // Only show notification if permission is granted
+  if (Notification.permission === 'granted') {
     try {
-      console.log('📳 Attempting to vibrate...');
-      const result = navigator.vibrate(200);
-      console.log('Vibration result:', result);
-      return result;
+      console.log('📳 Sending notification...');
+      const notification = new Notification('Claude Code', {
+        body: 'Response completed',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: 'claude-response',
+        renotify: true
+      });
+      
+      // Auto-close after 3 seconds
+      setTimeout(() => {
+        notification.close();
+      }, 3000);
+      
+      console.log('Notification sent successfully');
+      return true;
     } catch (error) {
-      console.error('Vibration error:', error);
+      console.error('Notification error:', error);
       return false;
     }
   } else {
-    console.log('❌ Vibration API not available');
+    console.log('❌ Notification permission not granted');
     return false;
   }
 };
@@ -1395,7 +1414,7 @@ const ImageAttachment = ({ file, onRemove, uploadProgress, error }) => {
 // - onReplaceTemporarySession: Called to replace temporary session ID with real WebSocket session ID
 //
 // This ensures uninterrupted chat experience by pausing sidebar refreshes during conversations.
-function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, messages, onFileOpen, onInputFocusChange, onSessionActive, onSessionInactive, onReplaceTemporarySession, onNavigateToSession, onShowSettings, onClearTodos, onTodoUpdate, autoExpandTools, showRawParameters, autoScrollToBottom, sendByCtrlEnter, permissionMode: externalPermissionMode, onPermissionModeChange, todoPanelOpen, vibrateOnComplete }) {
+function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, messages, onFileOpen, onInputFocusChange, onSessionActive, onSessionInactive, onReplaceTemporarySession, onNavigateToSession, onShowSettings, onClearTodos, onTodoUpdate, autoExpandTools, showRawParameters, autoScrollToBottom, sendByCtrlEnter, permissionMode: externalPermissionMode, onPermissionModeChange, todoPanelOpen, notifyOnComplete }) {
   const [input, setInput] = useState(() => {
     if (typeof window !== 'undefined' && selectedProject) {
       return safeLocalStorage.getItem(`draft_input_${selectedProject.name}`) || '';
@@ -2305,11 +2324,11 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                 const last = updated[updated.length - 1];
                 if (last && last.type === 'assistant' && last.isStreaming) {
                   console.log('🎯 Chat completion detected (content_block_stop)');
-                  console.log('vibrateOnComplete setting:', vibrateOnComplete);
+                  console.log('notifyOnComplete setting:', notifyOnComplete);
                   last.isStreaming = false;
-                  // Trigger vibration if enabled
-                  if (vibrateOnComplete) {
-                    triggerVibration();
+                  // Send notification if enabled
+                  if (notifyOnComplete) {
+                    sendNotification();
                   }
                 }
                 return updated;
@@ -2559,23 +2578,23 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
               const last = updated[updated.length - 1];
               if (last && last.type === 'assistant' && !last.isToolUse && last.isStreaming) {
                 console.log('🎯 Chat completion detected (cursor-result streaming)');
-                console.log('vibrateOnComplete setting:', vibrateOnComplete);
+                console.log('notifyOnComplete setting:', notifyOnComplete);
                 // Replace streaming content with the final content so deltas don't remain
                 const finalContent = textResult && textResult.trim() ? textResult : (last.content || '') + (pendingChunk || '');
                 last.content = finalContent;
                 last.isStreaming = false;
-                // Trigger vibration if enabled
-                if (vibrateOnComplete) {
-                  triggerVibration();
+                // Send notification if enabled
+                if (notifyOnComplete) {
+                  sendNotification();
                 }
               } else if (textResult && textResult.trim()) {
                 console.log('🎯 Chat completion detected (cursor-result new message)');
-                console.log('vibrateOnComplete setting:', vibrateOnComplete);
+                console.log('notifyOnComplete setting:', notifyOnComplete);
                 console.log('is_error:', r.is_error);
                 updated.push({ type: r.is_error ? 'error' : 'assistant', content: textResult, timestamp: new Date(), isStreaming: false });
-                // Trigger vibration if enabled (for new non-streaming messages)
-                if (vibrateOnComplete && !r.is_error) {
-                  triggerVibration();
+                // Send notification if enabled (for new non-streaming messages)
+                if (notifyOnComplete && !r.is_error) {
+                  sendNotification();
                 }
               }
               return updated;

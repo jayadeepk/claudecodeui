@@ -14,7 +14,7 @@ import {
   Zap,
   ListTodo,
   Monitor,
-  Vibrate
+  Bell
 } from 'lucide-react';
 import DarkModeToggle from './DarkModeToggle';
 import { useTheme } from '../contexts/ThemeContext';
@@ -34,8 +34,8 @@ const QuickSettingsPanel = ({
   onPermissionModeChange,
   todoPanelOpen,
   onTodoPanelChange,
-  vibrateOnComplete,
-  onVibrateOnCompleteChange,
+  notifyOnComplete,
+  onNotifyOnCompleteChange,
   isMobile
 }) => {
   const [localIsOpen, setLocalIsOpen] = useState(isOpen);
@@ -215,20 +215,32 @@ const QuickSettingsPanel = ({
                 />
               </label>
 
-              {isMobile && (
-                <label className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors border border-transparent hover:border-gray-300 dark:hover:border-gray-600">
-                  <span className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
-                    <Vibrate className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                    Vibrate on completion
-                  </span>
+              <label className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors border border-transparent hover:border-gray-300 dark:hover:border-gray-600">
+                <span className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
+                  <Bell className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  Notify on completion
+                </span>
+                <div className="flex items-center gap-2">
+                  {notifyOnComplete && Notification?.permission !== 'granted' && (
+                    <button
+                      onClick={async () => {
+                        if ('Notification' in window) {
+                          await Notification.requestPermission();
+                        }
+                      }}
+                      className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Allow
+                    </button>
+                  )}
                   <input
                     type="checkbox"
-                    checked={vibrateOnComplete}
-                    onChange={(e) => onVibrateOnCompleteChange(e.target.checked)}
+                    checked={notifyOnComplete}
+                    onChange={(e) => onNotifyOnCompleteChange(e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-800 dark:checked:bg-blue-600"
                   />
-                </label>
-              )}
+                </div>
+              </label>
             </div>
 
             {/* Input Settings */}
