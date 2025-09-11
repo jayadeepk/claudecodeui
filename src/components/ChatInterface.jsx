@@ -27,7 +27,7 @@ import { isCursorDisabled } from '../utils/featureFlags.js';
 import ClaudeStatus from './ClaudeStatus';
 import { MicButton } from './MicButton.jsx';
 import { api, authenticatedFetch } from '../utils/api';
-import { sendNotification } from '../utils/notifications';
+import { sendNotification, getTodoNotificationContent } from '../utils/notifications';
 
 
 
@@ -1509,41 +1509,6 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     }
   }, [chatMessages, onTodoUpdate]);
 
-  // Helper function to get notification content from last meaningful todo
-  const getNotificationContent = useCallback(() => {
-    console.log('📋 getNotificationContent called with todos:', todos);
-    
-    if (!todos || !Array.isArray(todos) || todos.length === 0) {
-      console.log('📋 No todos available');
-      return null;
-    }
-    
-    // Find the last completed or in-progress todo with meaningful content
-    const meaningfulTodos = todos.filter(todo => 
-      todo.content && 
-      todo.content.trim() && 
-      (todo.status === 'completed' || todo.status === 'in_progress')
-    );
-    
-    console.log('📋 Meaningful todos found:', meaningfulTodos);
-    
-    if (meaningfulTodos.length === 0) {
-      console.log('📋 No meaningful todos found');
-      return null;
-    }
-    
-    const lastTodo = meaningfulTodos[meaningfulTodos.length - 1];
-    console.log('📋 Last todo:', lastTodo);
-    
-    // Use activeForm for in-progress todos, content for completed todos
-    if (lastTodo.status === 'in_progress' && lastTodo.activeForm) {
-      console.log('📋 Using activeForm:', lastTodo.activeForm);
-      return lastTodo.activeForm;
-    }
-    
-    console.log('📋 Using content:', lastTodo.content);
-    return lastTodo.content;
-  }, [todos]);
 
   // Memoized diff calculation to prevent recalculating on every render
   const createDiff = useMemo(() => {
@@ -2317,7 +2282,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                   last.isStreaming = false;
                   // Send notification if enabled
                   if (notifyOnComplete) {
-                    const todoContent = getNotificationContent();
+                    const todoContent = getTodoNotificationContent(todos);
                     console.log('📋 Notification call 1 - todoContent:', todoContent);
                     const notificationContent = todoContent ? `✅ ${todoContent}` : last.content;
                     sendNotification('Claude Code', 'Task completed', notificationContent);
@@ -2577,7 +2542,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                 last.isStreaming = false;
                 // Send notification if enabled
                 if (notifyOnComplete) {
-                  const todoContent = getNotificationContent();
+                  const todoContent = getTodoNotificationContent(todos);
                   const notificationContent = todoContent ? `✅ ${todoContent}` : finalContent;
                   sendNotification('Claude Code', 'Task completed', notificationContent);
                 }
@@ -2588,7 +2553,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                 updated.push({ type: r.is_error ? 'error' : 'assistant', content: textResult, timestamp: new Date(), isStreaming: false });
                 // Send notification if enabled (for new non-streaming messages)
                 if (notifyOnComplete && !r.is_error) {
-                  const todoContent = getNotificationContent();
+                  const todoContent = getTodoNotificationContent(todos);
                   const notificationContent = todoContent ? `✅ ${todoContent}` : textResult;
                   sendNotification('Claude Code', 'Task completed', notificationContent);
                 }

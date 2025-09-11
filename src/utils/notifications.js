@@ -1,3 +1,39 @@
+// Extract meaningful content from todo list for notifications
+export const getTodoNotificationContent = (todos) => {
+  console.log('📋 getTodoNotificationContent called with todos:', todos);
+  
+  if (!todos || !Array.isArray(todos) || todos.length === 0) {
+    console.log('📋 No todos available');
+    return null;
+  }
+  
+  // Find the last completed or in-progress todo with meaningful content
+  const meaningfulTodos = todos.filter(todo => 
+    todo.content && 
+    todo.content.trim() && 
+    (todo.status === 'completed' || todo.status === 'in_progress')
+  );
+  
+  console.log('📋 Meaningful todos found:', meaningfulTodos);
+  
+  if (meaningfulTodos.length === 0) {
+    console.log('📋 No meaningful todos found');
+    return null;
+  }
+  
+  const lastTodo = meaningfulTodos[meaningfulTodos.length - 1];
+  console.log('📋 Last todo:', lastTodo);
+  
+  // Use activeForm for in-progress todos, content for completed todos
+  if (lastTodo.status === 'in_progress' && lastTodo.activeForm) {
+    console.log('📋 Using activeForm:', lastTodo.activeForm);
+    return lastTodo.activeForm;
+  }
+  
+  console.log('📋 Using content:', lastTodo.content);
+  return lastTodo.content;
+};
+
 // Create smart notification body based on message content
 const createNotificationBody = (content) => {
   if (!content || !content.trim()) {
