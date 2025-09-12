@@ -14,10 +14,12 @@ import {
   Zap,
   ListTodo,
   Monitor,
-  Bell
+  Bell,
+  Smartphone
 } from 'lucide-react';
 import DarkModeToggle from './DarkModeToggle';
 import { useTheme } from '../contexts/ThemeContext';
+import { subscribeToPushNotifications, unsubscribeFromPushNotifications, testPushNotification, isPushNotificationSupported, getPushSubscriptionStatus, initializePushNotifications } from '../utils/pushNotifications';
 
 const QuickSettingsPanel = ({ 
   isOpen, 
@@ -42,11 +44,34 @@ const QuickSettingsPanel = ({
   const [whisperMode, setWhisperMode] = useState(() => {
     return localStorage.getItem('whisperMode') || 'default';
   });
+  const [pushNotificationStatus, setPushNotificationStatus] = useState({
+    supported: false,
+    permission: 'default',
+    subscribed: false
+  });
+  const [pushLoading, setPushLoading] = useState(false);
   const { isDarkMode, useBrowserTheme, toggleBrowserTheme } = useTheme();
 
   useEffect(() => {
     setLocalIsOpen(isOpen);
   }, [isOpen]);
+
+  // Initialize push notifications on component mount
+  useEffect(() => {
+    const initPush = async () => {
+      const status = getPushSubscriptionStatus();
+      setPushNotificationStatus(status);
+      
+      if (status.supported) {
+        await initializePushNotifications();
+        // Update status after initialization
+        const updatedStatus = getPushSubscriptionStatus();
+        setPushNotificationStatus(updatedStatus);
+      }
+    };
+    
+    initPush();
+  }, []);
 
   const handleToggle = () => {
     const newState = !localIsOpen;
@@ -60,6 +85,46 @@ const QuickSettingsPanel = ({
     const currentIndex = modes.indexOf(permissionMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     onPermissionModeChange(modes[nextIndex]);
+  };
+
+  const handlePushNotificationToggle = async () => {
+    if (pushLoading) return;
+    
+    setPushLoading(true);
+    try {
+      if (pushNotificationStatus.subscribed) {
+        await unsubscribeFromPushNotifications();
+        console.log('✅ Unsubscribed from push notifications');
+      } else {
+        await subscribeToPushNotifications();
+        console.log('✅ Subscribed to push notifications');
+      }
+      
+      // Update status
+      const newStatus = getPushSubscriptionStatus();
+      setPushNotificationStatus(newStatus);
+      
+    } catch (error) {
+      console.error('❌ Push notification toggle failed:', error);
+      alert(`Push notification ${pushNotificationStatus.subscribed ? 'unsubscription' : 'subscription'} failed: ${error.message}`);
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleTestPushNotification = async () => {
+    if (pushLoading) return;
+    
+    setPushLoading(true);
+    try {
+      await testPushNotification('Test Notification', 'This is a test push notification from Claude Code!');
+      console.log('✅ Test push notification sent');
+    } catch (error) {
+      console.error('❌ Test push notification failed:', error);
+      alert(`Test notification failed: ${error.message}`);
+    } finally {
+      setPushLoading(false);
+    }
   };
 
   return (
@@ -242,6 +307,56 @@ const QuickSettingsPanel = ({
                 </div>
               </label>
             </div>
+
+            {/* Push Notifications */}
+            {pushNotificationStatus.supported && (
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Push Notifications</h4>
+                
+                <label className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded cursor-pointer">
+                  <span className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <Smartphone className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                    Server push notifications
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {pushNotificationStatus.permission !== 'granted' && (
+                      <span className="px-2 py-1 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded">
+                        Permission needed
+                      </span>
+                    )}
+                    <button
+                      onClick={handlePushNotificationToggle}
+                      disabled={pushLoading}
+                      className={`px-3 py-1 text-xs rounded transition-colors ${
+                        pushNotificationStatus.subscribed
+                          ? 'bg-red-600 hover:bg-red-700 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      } ${pushLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {pushLoading ? 'Loading...' : (pushNotificationStatus.subscribed ? 'Unsubscribe' : 'Subscribe')}
+                    </button>
+                  </div>
+                </label>
+                
+                {pushNotificationStatus.subscribed && (
+                  <div className="pl-6">
+                    <button
+                      onClick={handleTestPushNotification}
+                      disabled={pushLoading}
+                      className={`px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors ${
+                        pushLoading ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {pushLoading ? 'Sending...' : 'Test Notification'}
+                    </button>
+                  </div>
+                )}
+                
+                <div className="text-xs text-gray-500 dark:text-gray-400 pl-6">
+                  Push notifications work even when the app is closed or in background.
+                </div>
+              </div>
+            )}
 
             {/* Input Settings */}
             <div className="space-y-2">

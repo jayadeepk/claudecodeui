@@ -37,6 +37,7 @@ import fetch from 'node-fetch';
 import mime from 'mime-types';
 
 import { getProjects, getSessions, getSessionMessages, renameProject, deleteSession, deleteProject, addProjectManually, extractProjectDirectory, clearProjectDirectoryCache } from './projects.js';
+import { pushDb } from './database/db.js';
 import { spawnClaude, abortClaudeSession } from './claude-cli.js';
 import { spawnCursor, abortCursorSession } from './cursor-cli.js';
 import gitRoutes from './routes/git.js';
@@ -45,6 +46,7 @@ import mcpRoutes from './routes/mcp.js';
 import cursorRoutes from './routes/cursor.js';
 import { initializeDatabase } from './database/db.js';
 import { validateApiKey, authenticateToken, authenticateWebSocket } from './middleware/auth.js';
+import { initializePushService, getVapidPublicKey, sendPushNotificationToUser } from './services/pushNotifications.js';
 
 // File system watcher for projects folder
 let projectsWatcher = null;
@@ -456,9 +458,9 @@ wss.on('connection', (ws, request) => {
     const pathname = urlObj.pathname;
 
     if (pathname === '/shell') {
-        handleShellConnection(ws);
+        handleShellConnection(ws, request);
     } else if (pathname === '/ws') {
-        handleChatConnection(ws);
+        handleChatConnection(ws, request);
     } else {
         console.log('❌ Unknown WebSocket path:', pathname);
         ws.close();
@@ -466,8 +468,11 @@ wss.on('connection', (ws, request) => {
 });
 
 // Handle chat WebSocket connections
-function handleChatConnection(ws) {
+function handleChatConnection(ws, request) {
     console.log('💬 Chat WebSocket connected');
+    
+    // Attach user info from request (set during authentication)
+    ws.user = request.user;
 
     // Add to connected clients for project updates
     connectedClients.add(ws);
@@ -534,8 +539,11 @@ function handleChatConnection(ws) {
 }
 
 // Handle shell WebSocket connections
-function handleShellConnection(ws) {
+function handleShellConnection(ws, request) {
     console.log('🐚 Shell client connected');
+    
+    // Attach user info from request (set during authentication)
+    ws.user = request.user;
     let shellProcess = null;
 
     ws.on('message', async (message) => {
@@ -731,6 +739,78 @@ function handleShellConnection(ws) {
         console.error('❌ Shell WebSocket error:', error);
     });
 }
+// Push notification endpoints
+
+// Get VAPID public key for push subscription
+app.get('/api/push/vapid-public-key', authenticateToken, (req, res) => {
+  const publicKey = getVapidPublicKey();
+  if (!publicKey) {
+    return res.status(503).json({ error: 'Push notifications not configured' });
+  }
+  res.json({ publicKey });
+});
+
+// Subscribe to push notifications
+app.post('/api/push/subscribe', authenticateToken, async (req, res) => {
+  try {
+    const { subscription } = req.body;
+    const userId = req.user.id;
+
+    if (!subscription || !subscription.endpoint) {
+      return res.status(400).json({ error: 'Invalid subscription data' });
+    }
+
+    // Save subscription to database
+    pushDb.savePushSubscription(userId, subscription);
+    
+    console.log(`✅ Push subscription saved for user ${req.user.username}`);
+    res.json({ success: true, message: 'Push subscription saved successfully' });
+  } catch (error) {
+    console.error('Error saving push subscription:', error);
+    res.status(500).json({ error: 'Failed to save push subscription' });
+  }
+});
+
+// Unsubscribe from push notifications
+app.post('/api/push/unsubscribe', authenticateToken, async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    const userId = req.user.id;
+
+    if (!endpoint) {
+      return res.status(400).json({ error: 'Endpoint is required' });
+    }
+
+    // Remove subscription from database
+    pushDb.removePushSubscription(userId, endpoint);
+    
+    console.log(`✅ Push subscription removed for user ${req.user.username}`);
+    res.json({ success: true, message: 'Push subscription removed successfully' });
+  } catch (error) {
+    console.error('Error removing push subscription:', error);
+    res.status(500).json({ error: 'Failed to remove push subscription' });
+  }
+});
+
+// Test push notification endpoint (for development)
+app.post('/api/push/test', authenticateToken, async (req, res) => {
+  try {
+    const { title = 'Test Notification', body = 'This is a test push notification' } = req.body;
+    const userId = req.user.id;
+    
+    const success = await sendPushNotificationToUser(userId, title, body, { test: true });
+    
+    if (success) {
+      res.json({ success: true, message: 'Test notification sent' });
+    } else {
+      res.status(500).json({ error: 'Failed to send test notification' });
+    }
+  } catch (error) {
+    console.error('Error sending test notification:', error);
+    res.status(500).json({ error: 'Failed to send test notification' });
+  }
+});
+
 // Audio transcription endpoint
 app.post('/api/transcribe', authenticateToken, async (req, res) => {
     try {
@@ -1064,6 +1144,9 @@ async function startServer() {
         // Initialize authentication database
         await initializeDatabase();
         console.log('✅ Database initialization skipped (testing)');
+        
+        // Initialize push notification service
+        initializePushService();
 
         server.listen(PORT, '0.0.0.0', async () => {
             console.log(`Claude Code UI server running on http://0.0.0.0:${PORT}`);

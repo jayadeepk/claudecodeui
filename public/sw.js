@@ -75,23 +75,53 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// Handle push messages (for future push notification support)
+// Handle push messages from server
 self.addEventListener('push', event => {
   console.log('📳 Service Worker: Push received');
   
-  const options = {
-    body: event.data ? event.data.text() : 'Default notification body',
+  let notificationData = {
+    title: 'Claude Code',
+    body: 'Task completed',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     tag: 'claude-response',
     renotify: true,
+    requireInteraction: false,
+    silent: false,
     data: {
-      url: '/'
+      url: '/',
+      timestamp: Date.now()
     }
   };
   
+  // Parse push data if available
+  if (event.data) {
+    try {
+      const pushData = event.data.json();
+      notificationData = {
+        ...notificationData,
+        ...pushData
+      };
+    } catch (error) {
+      console.error('Failed to parse push data:', error);
+      // Fall back to text if JSON parsing fails
+      notificationData.body = event.data.text();
+    }
+  }
+  
+  console.log('📳 Service Worker: Showing notification:', notificationData.title);
+  
   event.waitUntil(
-    self.registration.showNotification('Claude Code', options)
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      tag: notificationData.tag,
+      renotify: notificationData.renotify,
+      requireInteraction: notificationData.requireInteraction,
+      silent: notificationData.silent,
+      data: notificationData.data
+    })
   );
 });
 

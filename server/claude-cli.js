@@ -3,6 +3,7 @@ import crossSpawn from 'cross-spawn';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import { sendPushNotificationToUser } from './services/pushNotifications.js';
 
 // Use cross-spawn on Windows for better command execution
 const spawnFunction = process.platform === 'win32' ? crossSpawn : spawn;
@@ -11,7 +12,11 @@ let activeClaudeProcesses = new Map(); // Track active processes by session ID
 
 async function spawnClaude(command, options = {}, ws) {
   return new Promise(async (resolve, reject) => {
-    const { sessionId, projectPath, cwd, resume, toolsSettings, permissionMode, images } = options;
+    const { sessionId, projectPath, cwd, resume, toolsSettings, permissionMode, images, userId, username } = options;
+    
+    // Extract user info from WebSocket if not provided
+    const requestUserId = userId || ws.user?.id;
+    const requestUsername = username || ws.user?.username;
     let capturedSessionId = sessionId; // Track session ID throughout the process
     let sessionCreatedSent = false; // Track if we've already sent session-created event
     
@@ -287,6 +292,37 @@ async function spawnClaude(command, options = {}, ws) {
                 sessionId: capturedSessionId,
                 parentSessionId: sessionId
               }));
+            }
+          }
+          
+          // Check for task completion and send push notification
+          if (response.type === 'content_block_stop') {
+            console.log('🎯 Task completion detected on server side');
+            
+            // Send push notification to user
+            if (requestUserId) {
+              try {
+                // Extract task content for notification (simplified)
+                const notificationTitle = 'Claude Code';
+                const notificationBody = 'Task completed';
+                
+                await sendPushNotificationToUser(
+                  requestUserId, 
+                  notificationTitle, 
+                  notificationBody,
+                  {
+                    sessionId: capturedSessionId,
+                    projectPath: projectPath,
+                    timestamp: Date.now()
+                  }
+                );
+                
+                console.log(`✅ Push notification sent for task completion to user ${requestUsername}`);
+              } catch (pushError) {
+                console.error('❌ Failed to send push notification:', pushError);
+              }
+            } else {
+              console.log('⚠️  No user ID available for push notification');
             }
           }
           
